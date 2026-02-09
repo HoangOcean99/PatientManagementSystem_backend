@@ -32,3 +32,12 @@ export const loginLocal = asyncHandler(async (req, res) => {
         },
     });
 });
+
+export const syncUserGoogle = asyncHandler(async (req, res) => {
+  const data = await authService.syncUserGoogle(req.user);
+  res.status(200).json({
+    success: true,
+    user: data
+  });
+});
+

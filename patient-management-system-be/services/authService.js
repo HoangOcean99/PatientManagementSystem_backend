@@ -30,3 +30,16 @@ export const loginLocal = async (username, password) => {
     if (error) throw error;
     return data;
 }
+
+export const syncUserGoogle = async (user) => {
+  await supabase.from('Users').upsert({
+    email: user.email,
+    role: 'patient',
+    is_minor: false
+  });
+
+  return {
+    id: user.id,
+    username
+  };
+};
