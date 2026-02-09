@@ -14,6 +14,7 @@ export const registerLocal = async (username, password) => {
     });
     if (error) throw error;
     await supabase.from('Users').insert({
+        user_id: data.user.id,
         username,
         role: 'patient',
         is_minor: true
@@ -33,6 +34,7 @@ export const loginLocal = async (username, password) => {
 
 export const syncUserGoogle = async (user) => {
   await supabase.from('Users').upsert({
+    user_id: user.id,
     email: user.email,
     role: 'patient',
     is_minor: false
