@@ -141,3 +141,54 @@ export const updateDoctor = async (doctorId, updateData) => {
     // 4. Trả về dữ liệu mới nhất sau khi update
     return await getDoctorById(doctorId);
 };
+
+export const getDoctorAppointments = async (doctorId, { date, status } = {}) => {
+    let query = supabase
+        .from('Appointments')
+        .select(`
+            appointment_id,
+            appointment_date,
+            start_time,
+            end_time,
+            status,
+            queue_number,
+            created_at,
+            Patients (
+                patient_id,
+                dob,
+                gender,
+                address,
+                Users (
+                    full_name,
+                    phone_number,
+                    avatar_url
+                )
+            ),
+            ClinicServices (
+                service_id,
+                name,
+                duration_minutes,
+                price
+            )
+        `)
+        .eq('doctor_id', doctorId);
+
+    // Optional filters
+    if (date) {
+        query = query.eq('appointment_date', date);
+    }
+
+    if (status) {
+        query = query.eq('status', status);
+    }
+
+    // Sort by date and time descending (newest first)
+    query = query.order('appointment_date', { ascending: false })
+                 .order('start_time', { ascending: false });
+
+    const { data, error } = await query;
+
+    if (error) throw new AppError(error.message, 500);
+
+    return data;
+};
