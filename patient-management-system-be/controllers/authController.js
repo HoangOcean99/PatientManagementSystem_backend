@@ -17,3 +17,18 @@ export const registerLocal = asyncHandler(async (req, res) => {
         },
     });
 });
+export const loginLocal = asyncHandler(async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) throw new AppError('Username and password are required', 400);
+
+    const data = await authService.loginLocal(username, password);
+
+    res.status(200).json({
+        success: true,
+        user: {
+            id: data.user.id,
+            username,
+        },
+    });
+});
