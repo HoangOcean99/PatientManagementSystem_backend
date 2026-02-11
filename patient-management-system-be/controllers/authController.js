@@ -17,6 +17,7 @@ export const registerLocal = asyncHandler(async (req, res) => {
         },
     });
 });
+
 export const loginLocal = asyncHandler(async (req, res) => {
     const { username, password } = req.body;
 

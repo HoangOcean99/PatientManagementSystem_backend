@@ -33,15 +33,30 @@ export const loginLocal = async (username, password) => {
 }
 
 export const syncUserGoogle = async (user) => {
-  await supabase.from('Users').upsert({
-    user_id: user.id,
-    email: user.email,
-    role: 'patient',
-    is_minor: false
-  });
+    const { error: upsertError } = await supabase
+        .from('Users')
+        .upsert({
+            user_id: user.id,
+            email: user.email,
+            is_minor: false
+        });
 
-  return {
-    id: user.id,
-    username
-  };
+    if (upsertError) {
+        throw upsertError;
+    }
+    const { data, error } = await supabase
+        .from('Users')
+        .select('role')
+        .eq('user_id', user.id) 
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    return {
+        id: user.id,
+        role: data.role
+    };
 };
+

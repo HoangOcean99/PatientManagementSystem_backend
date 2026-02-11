@@ -1,3 +1,5 @@
+import { supabase } from "../supabaseClient.js";
+
 // checking token function và security of api 
 export const requireAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -22,7 +24,7 @@ export const requireRole = (roles = []) => {
     const { data } = await supabase
       .from('Users')
       .select('role')
-      .eq('id', req.user.id)
+      .eq('user_id', req.user.id)
       .single();
 
     if (!roles.includes(data.role)) {
