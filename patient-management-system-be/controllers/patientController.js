@@ -34,3 +34,16 @@ export const getPatient = asyncHandler(async (req, res) => {
     pagination: result.pagination,
   });
 });
+export const updatePatient = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const payload = req.body;
+  if (!id) {
+    throw new AppError("Patient ID is required", 400);
+  }
+  const updated = await patientService.updatePatient(id, payload);
+  res.status(200).json({
+    success: true,
+    message: "Patient updated successfully",
+    data: updated,
+  });
+});

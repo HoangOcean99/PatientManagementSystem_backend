@@ -1,5 +1,9 @@
 import express from "express";
-import { createPatient, getPatient } from "../controllers/patientController.js";
+import {
+  createPatient,
+  getPatient,
+  updatePatient,
+} from "../controllers/patientController.js";
 // import { auth, checkRole } from "../middlewares/auth.js";
 
 const patientRouter = express.Router();
@@ -12,4 +16,7 @@ patientRouter.post("/", createPatient);
 // patientRouter.get("/", auth, checkRole(["admin", "doctor"]), getPatient);
 patientRouter.get("/", getPatient);
 
+// Update Patient
+// patientRouter.put("/:id", auth, checkRole(["admin"]), updatePatient);
+patientRouter.put("/:id", updatePatient);
 export default patientRouter;

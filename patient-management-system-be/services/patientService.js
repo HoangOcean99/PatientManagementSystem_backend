@@ -1,3 +1,4 @@
+import { get } from "mongoose";
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 export const createPatient = async (payload) => {
@@ -71,4 +72,80 @@ export const getPatientList = async ({
       totalPages: Math.ceil(count / pageSize),
     },
   };
+};
+export const updatePatient = async (patientId, payload) => {
+  // 1. Check patient exists
+  const { data: existing, error: findError } = await supabase
+    .from("Patients")
+    .select("*")
+    .eq("patient_id", patientId)
+    .single();
+
+  if (findError || !existing) {
+    throw new AppError("Patient not found", 404);
+  }
+
+  // 2. Update Patients table
+  const patientFields = ["dob", "gender", "address"];
+  const patientPayload = {};
+
+  patientFields.forEach((key) => {
+    if (payload[key] !== undefined) patientPayload[key] = payload[key];
+  });
+
+  if (Object.keys(patientPayload).length > 0) {
+    const { error: updatePatientError } = await supabase
+      .from("Patients")
+      .update(patientPayload)
+      .eq("patient_id", patientId);
+
+    if (updatePatientError) {
+      throw new AppError(updatePatientError.message, 500);
+    }
+  }
+
+  // 3. Update Users table
+  const userFields = ["full_name", "phone_number", "avatar_url", "status"];
+  const userPayload = {};
+
+  userFields.forEach((key) => {
+    if (payload[key] !== undefined) userPayload[key] = payload[key];
+  });
+
+  if (Object.keys(userPayload).length > 0) {
+    const { error: updateUserError } = await supabase
+      .from("Users")
+      .update(userPayload)
+      .eq("user_id", patientId);
+
+    if (updateUserError) {
+      throw new AppError(updateUserError.message, 500);
+    }
+  }
+
+  // 4. Fetch updated data
+  const { data: fullData, error: fetchError } = await supabase
+    .from("Patients")
+    .select(
+      `
+    patient_id,
+    dob,
+    gender,
+    address,
+    Users (
+      full_name,
+      phone_number,
+      avatar_url,
+      status
+    )
+  `,
+    )
+    .eq("patient_id", patientId)
+    .single();
+
+  if (fetchError) {
+    throw new AppError(fetchError.message, 500);
+  }
+
+  return fullData;
 };
