@@ -39,4 +39,5 @@ export const verifyOtp = async (email, otp) => {
     }
 
     otpStore.delete(email);
+    return true;    
 };
