@@ -1,11 +1,8 @@
 import { supabase } from "../supabaseClient.js"
 import { AppError } from "../utils/app-error.js";
+import { fakeEmail, hash } from "../utils/authUtils.js";
 import { sendOtp, verifyOtp } from "./gmailService.js";
-
-// functions handle logic
-function fakeEmail(username) {
-    return `${username}@app.com`;
-}
+import crypto from "crypto";
 
 // Function link to database
 export const requestRegister = async (username, emailParent) => {
@@ -28,7 +25,7 @@ export const requestRegister = async (username, emailParent) => {
         throw new AppError("Parent email does not exist", 404);
     }
 
-    await sendOtp(emailParent);
+    await sendOtp(emailParent, 'verifyEmail');
 
     return {
         message: "OTP sent",
@@ -85,6 +82,8 @@ export const verifyAndCreateUser = async (
 };
 
 
+
+
 export const loginLocal = async (username, password) => {
     const email = fakeEmail(username);
     const { data: dataLogin, error: errorLogin } = await supabase.auth.signInWithPassword({
@@ -133,3 +132,101 @@ export const syncUserGoogle = async (user) => {
     };
 };
 
+export const requestForgetPassword = async (username) => {
+    const { data, error } = await supabase
+        .from('Users')
+        .select(`
+            user_id,
+            FamilyRelationships!FamilyRelationships_child_user_id_fkey!inner (
+                parent_user_id,
+                Users!FamilyRelationships_parent_user_id_fkey (
+                    email
+                )
+            )
+        `)
+        .eq('username', username)
+        .maybeSingle();
+
+    if (error) {
+        console.error(error);
+        throw new AppError("Database error", 500);
+    }
+
+    if (!data) {
+        throw new AppError("Username không tồn tại", 404);
+    }
+
+    const parentEmail =
+        data.FamilyRelationships?.[0]?.Users?.email;
+
+    if (!parentEmail) {
+        throw new AppError("Không tìm thấy email người giám hộ", 404);
+    }
+
+    await sendOtp(parentEmail, 'resetPassword');
+
+    return {
+        message: "OTP sent",
+        email: parentEmail
+    };
+};
+
+
+export const verifyResetOtp = async (username, emailParent, otp) => {
+
+    await verifyOtp(emailParent, otp);
+
+    const { data: user } = await supabase
+        .from("Users")
+        .select("user_id")
+        .eq("username", username)
+        .single();
+
+    if (!user) {
+        return { success: false };
+    }
+
+    await supabase
+        .from("password_reset_tokens")
+        .delete()
+        .eq("user_id", user.user_id);
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = hash(rawToken);
+
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    await supabase
+        .from("password_reset_tokens")
+        .insert({
+            user_id: user.user_id,
+            token_hash: tokenHash,
+            expires_at: expiresAt
+        });
+    return { resetToken: rawToken };
+};
+
+export const resetPassword = async (token, newPassword) => {
+
+    const tokenHash = hash(token);
+
+    const { data, error } = await supabase
+        .from("password_reset_tokens")
+        .select("*")
+        .eq("token_hash", tokenHash)
+        .single();
+
+    if (error || !data)
+        throw new Error("Invalid or expired token");
+
+    if (new Date(data.expires_at) < new Date())
+        throw new Error("Token expired");
+
+    await supabase.auth.admin.updateUserById(
+        data.user_id,
+        { password: newPassword }
+    );
+
+    await supabase.auth.admin.signOut(data.user_id);
+
+    return { success: true };
+};
