@@ -3,7 +3,7 @@ import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
-import baseRouter from './routes/BaseRoutes.js';
+import baseRouter from './routes/baseRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import doctorRouter from './routes/doctorRoutes.js';
 

@@ -91,7 +91,13 @@ export const searchDoctors = async ({ name, specialization, status }) => {
 };
 
 export const updateDoctor = async (doctorId, updateData) => {
-    // 1. Tách dữ liệu cho 2 bảng
+    // 1. Kiểm tra bác sĩ có tồn tại không
+    const existingDoctor = await getDoctorById(doctorId);
+    if (!existingDoctor) {
+        throw new AppError('No doctor found with that ID', 404);
+    }
+
+    // 2. Tách dữ liệu cho 2 bảng
     const { 
         // Doctor fields
         specialization, bio, room_number, 
@@ -110,10 +116,6 @@ export const updateDoctor = async (doctorId, updateData) => {
     if (avatar_url !== undefined) userUpdates.avatar_url = avatar_url;
     if (status !== undefined) userUpdates.status = status;
 
-    // 2. Với Schema hiện tại, doctor_id chính là user_id (Quan hệ 1-1)
-    // Nên không cần query lấy user_id nữa.
-    const userId = doctorId;
-
     // 3. Thực hiện Update song song (Parallel)
     const updatePromises = [];
 
@@ -123,9 +125,10 @@ export const updateDoctor = async (doctorId, updateData) => {
         );
     }
 
-    if (Object.keys(userUpdates).length > 0 && userId) {
+    if (Object.keys(userUpdates).length > 0) {
+        // Với Schema hiện tại, doctor_id chính là user_id (Quan hệ 1-1)
         updatePromises.push(
-            supabase.from('Users').update(userUpdates).eq('user_id', userId)
+            supabase.from('Users').update(userUpdates).eq('user_id', doctorId)
         );
     }
 
@@ -141,6 +144,7 @@ export const updateDoctor = async (doctorId, updateData) => {
     // 4. Trả về dữ liệu mới nhất sau khi update
     return await getDoctorById(doctorId);
 };
+
 
 export const getDoctorAppointments = async (doctorId, { date, status } = {}) => {
     let query = supabase
