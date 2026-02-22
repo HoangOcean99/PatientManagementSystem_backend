@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import baseRouter from './routes/BaseRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
-
+import appointmentRouter from './routes/appointmentRoutes.js';
 const app = express();
 
 app.use(logger('dev'));
@@ -14,6 +14,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use('/base', baseRouter);
+app.use('/appointment', appointmentRouter);
 
 app.use(errorHandler);
 
