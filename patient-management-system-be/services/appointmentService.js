@@ -6,3 +6,9 @@ export const getListAppointments = async () => {
   if(error) throw new AppError(error.message, 500);
   return data;
 }
+
+export const createAppointment = async (appointmentData) => {
+  const { data, error } = await supabase.from('Appointments').insert(appointmentData).select().single();
+  if(error) throw new AppError(error.message, 500);
+  return data;
+}
