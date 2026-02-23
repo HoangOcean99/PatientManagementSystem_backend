@@ -13,7 +13,7 @@ export const getAllDoctors = asyncHandler(async (req, res, next) => {
 });
 
 export const getDoctorById = asyncHandler(async (req, res, next) => {
-    const { doctorId } = req.query;
+    const { doctorId } = req.params;
 
     if (!doctorId) {
         return next(new AppError('Doctor ID is null', 400));
@@ -40,5 +40,43 @@ export const searchDoctors = asyncHandler(async (req, res, next) => {
         status: 'success',
         results: doctors.length,
         data: doctors
+    });
+});
+
+export const updateDoctor = asyncHandler(async (req, res, next) => {
+    // Lấy ID từ params (chuẩn RESTful: /doctors/update/:id) 
+    const { doctorId } = req.params;
+    const updateData = req.body;
+
+    if (!doctorId) {
+        return next(new AppError('Doctor ID is required', 400));
+    }
+
+    const updatedDoctor = await doctorService.updateDoctor(doctorId, updateData);
+
+    if (!updatedDoctor) {
+        return next(new AppError('Doctor not found or update failed', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: updatedDoctor
+    });
+});
+
+export const getAppointments = asyncHandler(async (req, res, next) => {
+    const { doctorId } = req.params;
+    const { date, status } = req.query; // Filter query params
+
+    if (!doctorId) {
+        return next(new AppError('Doctor ID is required', 400));
+    }
+
+    const appointments = await doctorService.getDoctorAppointments(doctorId, { date, status });
+
+    res.status(200).json({
+        status: 'success',
+        results: appointments.length,
+        data: appointments
     });
 });

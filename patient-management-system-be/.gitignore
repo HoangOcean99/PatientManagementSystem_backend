@@ -22,3 +22,6 @@ Thumbs.db
 # editor
 .vscode/
 .idea/
+
+#data base
+dataBase.txt
