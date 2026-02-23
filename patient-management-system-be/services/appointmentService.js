@@ -105,3 +105,15 @@ if(createError) throw new AppError(createError.message, 500);
 return newAppointment;
 }
 
+export const updateAppointment = async (appointment_id, status) => {
+  const { data: updatedAppointment, error: updateError } = await supabase
+  .from('Appointments')
+  .update({ status: status })
+  .eq('appointment_id', appointment_id)
+  .select()
+  .single();
+  if(updateError) throw new AppError(updateError.message, 500);
+  return updatedAppointment;
+}
+
+
