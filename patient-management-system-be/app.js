@@ -12,6 +12,7 @@ import patientRouter from "./routes/patientRoutes.js";
 import cors from 'cors';
 
 
+import appointmentRouter from './routes/appointmentRoutes.js';
 const app = express();
 
 app.use(cors({
@@ -30,6 +31,7 @@ app.use('/auth', authRouter);
 app.use('/gmail', gmailRouter);
 
 app.use("/patients", patientRouter);
+app.use('/appointment', appointmentRouter);
 
 app.use(errorHandler);
 
