@@ -255,7 +255,8 @@ export const updateMedicalRecord = async (recordId, updateData, doctorId) => {
         throw new AppError(`Cannot modify record. Appointment is ${record.Appointments.status}`, 400);
     }
 
-    // Tách dữ liệu con (prescriptions, lab_orders) ra khỏi dữ liệu chính
+    // Tách prescriptions ra khỏi dữ liệu chính
+    // Lab orders KHÔNG được sync ở đây — dùng endpoint riêng POST /lab-orders
     const { prescriptions, lab_orders, ...recordFields } = updateData;
 
     // Update các trường chính của MedicalRecord (symptoms, diagnosis, doctor_notes)
@@ -271,11 +272,6 @@ export const updateMedicalRecord = async (recordId, updateData, doctorId) => {
     // Sync đơn thuốc nếu được gửi lên
     if (prescriptions !== undefined) {
         await syncPrescriptions(recordId, prescriptions);
-    }
-
-    // Sync xét nghiệm nếu được gửi lên
-    if (lab_orders !== undefined) {
-        await syncLabOrders(recordId, lab_orders);
     }
 
     // Trả về dữ liệu mới nhất kèm child data
