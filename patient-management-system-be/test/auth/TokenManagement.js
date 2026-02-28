@@ -3,10 +3,6 @@ const app = require('../app');
 
 describe('Token Management - 15 Test Cases (UTC01-UTC15)', () => {
 
-    // ==========================================
-    // PHẦN 1: TRUY CẬP VÀ DUY TRÌ PHIÊN (PERSISTENCE)
-    // ==========================================
-
     test('UTC01: Normal - Access protected route with valid token', async () => {
         const res = await request(app)
             .get('/api/user/profile')
@@ -53,10 +49,6 @@ describe('Token Management - 15 Test Cases (UTC01-UTC15)', () => {
         expect(res.statusCode).toBe(200);
     });
 
-    // ==========================================
-    // PHẦN 2: LỖI REFRESH VÀ XÁC THỰC
-    // ==========================================
-
     test('UTC07: Normal - Refresh token again (Stability check)', async () => {
         const res = await request(app)
             .post('/api/auth/refresh-token')
@@ -72,10 +64,6 @@ describe('Token Management - 15 Test Cases (UTC01-UTC15)', () => {
         expect(res.statusCode).toBe(401);
         expect(res.body.exception).toBe('TokenExpiredException');
     });
-
-    // ==========================================
-    // PHẦN 3: ĐĂNG XUẤT (LOGOUT FLOW)
-    // ==========================================
 
     test('UTC09: Normal - Logout successfully from current device', async () => {
         const res = await request(app)
@@ -115,10 +103,6 @@ describe('Token Management - 15 Test Cases (UTC01-UTC15)', () => {
             .send({ refreshToken: 'valid_refresh_token' });
         expect(res.statusCode).toBe(200);
     });
-
-    // ==========================================
-    // PHẦN 4: LỖI HỆ THỐNG VÀ ĐỊNH DẠNG
-    // ==========================================
 
     test('UTC14: Abnormal - Refresh with malformed/invalid token string', async () => {
         const res = await request(app)

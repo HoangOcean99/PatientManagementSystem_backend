@@ -27,17 +27,6 @@ export const verifyAndCreateUser = asyncHandler(async (req, res) => {
     });
 });
 
-export const loginLocal = asyncHandler(async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) throw new AppError('Username and password are required', 400);
-
-    const data = await authService.loginLocal(username, password);
-
-    res.status(200).json({
-        success: true,
-        user: data
-    });
-});
 
 export const syncUserGoogle = asyncHandler(async (req, res) => {
     const data = await authService.syncUserGoogle(req.user);
@@ -73,6 +62,14 @@ export const resetPassword = asyncHandler(async (req, res) => {
     if (!token || !newPassword) throw new AppError('Token and newPassword are required', 400);
 
     const data = await authService.resetPassword(token, newPassword);
+    res.status(200).json({
+        success: true,
+        data: data
+    });
+});
+
+export const signOut = asyncHandler(async (req, res) => {
+    const data = await authService.signOut();
     res.status(200).json({
         success: true,
         data: data

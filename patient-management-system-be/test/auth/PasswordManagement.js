@@ -3,10 +3,6 @@ const app = require('../app');
 
 describe('Password Management - 15 Test Cases (UTC01-UTC15)', () => {
 
-  // ==========================================
-  // PHẦN 1: CẬP NHẬT MẬT KHẨU (UPDATE PASSWORD)
-  // ==========================================
-
   test('UTC01: Normal - Update password successfully', async () => {
     const res = await request(app)
       .patch('/api/auth/update-password')
@@ -45,10 +41,6 @@ describe('Password Management - 15 Test Cases (UTC01-UTC15)', () => {
     // Kỳ vọng trả về 503 để khớp với cột Failed (F) và mã DFID006 của bạn
     if(res.statusCode === 503) expect(res.statusCode).toBe(503);
   });
-
-  // ==========================================
-  // PHẦN 2: KHÔI PHỤC MẬT KHẨU (PASSWORD RECOVERY)
-  // ==========================================
 
   test('UTC06: Normal - Request password recovery email successfully', async () => {
     const res = await request(app)

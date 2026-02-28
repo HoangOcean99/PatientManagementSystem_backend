@@ -82,28 +82,6 @@ export const verifyAndCreateUser = async (
 };
 
 
-
-
-export const loginLocal = async (username, password) => {
-    const email = fakeEmail(username);
-    const { data: dataLogin, error: errorLogin } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-    });
-    if (errorLogin) throw errorLogin;
-
-    const { data, error } = await supabase
-        .from('Users')
-        .select('user_id, role')
-        .eq('user_id', dataLogin.user.id)
-        .single();
-
-    if (error) {
-        throw error;
-    }
-    return data;
-}
-
 export const syncUserGoogle = async (user) => {
     const { error: upsertError } = await supabase
         .from('Users')
@@ -229,4 +207,13 @@ export const resetPassword = async (token, newPassword) => {
     await supabase.auth.admin.signOut(data.user_id);
 
     return { success: true };
+};
+export const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+        throw error;
+    }
+
+    return true;
 };
