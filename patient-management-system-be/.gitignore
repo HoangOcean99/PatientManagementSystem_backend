@@ -23,8 +23,8 @@ Thumbs.db
 .vscode/
 .idea/
 
-#data base
+# database
 dataBase.txt
 
-#test
+# test
 Ly_Unit_TestCase_1.0.xlsx
