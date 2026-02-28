@@ -146,7 +146,7 @@ export const updateDoctor = async (doctorId, updateData) => {
 };
 
 
-export const getDoctorAppointments = async (doctorId, { date, status } = {}) => {
+export const getDoctorAppointmentsByDoctorId = async (doctorId, { date, status } = {}) => {
     let query = supabase
         .from('Appointments')
         .select(`
