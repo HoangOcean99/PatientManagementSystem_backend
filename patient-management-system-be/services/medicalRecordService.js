@@ -185,7 +185,8 @@ export const getMedicalRecordById = async (recordId) => {
                 Users (full_name, phone_number)
             ),
             Doctors (
-                Users (full_name, specialization)
+                specialization,
+                Users (full_name)
             ),
             Appointments (appointment_date, start_time, status),
             Prescriptions (*),

@@ -2,6 +2,26 @@ import * as labOrderService from '../services/labOrderService.js';
 import asyncHandler from '../utils/async-handler.js';
 import { AppError } from '../utils/app-error.js';
 
+// GET /lab-orders — Lấy tất cả xét nghiệm (có filter + phân trang)
+export const getAllLabOrders = asyncHandler(async (req, res) => {
+    const { status, record_id, patient_id, page, limit } = req.query;
+
+    const result = await labOrderService.getAllLabOrders({
+        status,
+        record_id,
+        patient_id,
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
+    });
+
+    res.status(200).json({
+        status: 'success',
+        results: result.lab_orders.length,
+        pagination: result.pagination,
+        data: result.lab_orders,
+    });
+});
+
 // POST /lab-orders — BS khám tạo yêu cầu xét nghiệm
 export const createLabOrders = asyncHandler(async (req, res, next) => {
     const { record_id, doctor_id, lab_orders } = req.body;

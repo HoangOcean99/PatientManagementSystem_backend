@@ -5,7 +5,7 @@ import { AppError } from '../utils/app-error.js';
 export const startExamination = asyncHandler(async (req, res, next) => {
     // Trong thực tế doctor_id sẽ lấy từ token (req.user.id), 
     // ở đây dùng body tạm thời cho việc test API
-    const { appointment_id, doctor_id, patient_id } = req.body;
+    const { appointment_id, doctor_id, patient_id } = req.params;
     
     if (!appointment_id || !doctor_id || !patient_id) {
         return next(new AppError('Missing appointment_id, doctor_id, or patient_id', 400));
@@ -21,7 +21,7 @@ export const startExamination = asyncHandler(async (req, res, next) => {
 });
 
 export const updateMedicalRecord = asyncHandler(async (req, res, next) => {
-    const { recordId } = req.query;
+    const { recordId } = req.params;
     // Tương tự, doctor_id nên lấy từ token
     const { doctor_id, ...updateData } = req.body;
 
@@ -42,7 +42,7 @@ export const updateMedicalRecord = asyncHandler(async (req, res, next) => {
 });
 
 export const completeExamination = asyncHandler(async (req, res, next) => {
-    const { recordId } = req.query;
+    const { recordId } = req.params;
     const { doctor_id } = req.body; // mock user token
 
     if (!recordId) {
@@ -62,7 +62,7 @@ export const completeExamination = asyncHandler(async (req, res, next) => {
 });
 
 export const getMedicalRecordById = asyncHandler(async (req, res, next) => {
-    const { recordId } = req.query;
+    const { recordId } = req.params;
 
     if (!recordId) {
         return next(new AppError('Record ID is required', 400));
@@ -81,7 +81,7 @@ export const getMedicalRecordById = asyncHandler(async (req, res, next) => {
 });
 
 export const getMedicalRecordByAppointment = asyncHandler(async (req, res, next) => {
-    const { appointmentId } = req.query;
+    const { appointmentId } = req.params;
 
     if (!appointmentId) {
         return next(new AppError('Appointment ID is required', 400));
@@ -96,7 +96,7 @@ export const getMedicalRecordByAppointment = asyncHandler(async (req, res, next)
 });
 
 export const getMedicalRecordsByPatient = asyncHandler(async (req, res, next) => {
-    const { patientId } = req.query;
+    const { patientId } = req.params;
 
     if (!patientId) {
         return next(new AppError('Patient ID is required', 400));

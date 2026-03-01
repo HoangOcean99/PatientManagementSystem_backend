@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+    getAllLabOrders,
     createLabOrders,
     getTodayLabOrders,
     getLabOrderById,
@@ -7,6 +8,9 @@ import {
 } from '../controllers/labOrderController.js';
 
 const router = express.Router();
+
+// 0. Lấy tất cả xét nghiệm (filter + phân trang)
+router.get('/', getAllLabOrders);
 
 // 1. BS khám — tạo yêu cầu xét nghiệm
 router.post('/', createLabOrders);

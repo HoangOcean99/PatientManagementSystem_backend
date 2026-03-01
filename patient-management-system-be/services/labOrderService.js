@@ -2,6 +2,63 @@ import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 
 // ============================================================
+// 0. Lấy tất cả Lab Orders (filter + phân trang)
+// ============================================================
+export const getAllLabOrders = async (query = {}) => {
+    const { status, record_id, patient_id, page = 1, limit = 20 } = query;
+
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let qb = supabase
+        .from('LabOrders')
+        .select(`
+            *,
+            MedicalRecords (
+                record_id,
+                Patients (
+                    patient_id,
+                    dob,
+                    gender,
+                    Users (full_name, phone_number)
+                ),
+                Doctors (
+                    Users (full_name)
+                ),
+                Appointments (appointment_id, appointment_date)
+            )
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+    if (status) {
+        qb = qb.eq('status', status);
+    }
+
+    if (record_id) {
+        qb = qb.eq('record_id', record_id);
+    }
+
+    if (patient_id) {
+        qb = qb.eq('MedicalRecords.Patients.patient_id', patient_id);
+    }
+
+    const { data, error, count } = await qb;
+
+    if (error) throw new AppError(error.message, 500);
+
+    return {
+        lab_orders: data,
+        pagination: {
+            page: Number(page),
+            limit: Number(limit),
+            total: count,
+            total_pages: Math.ceil(count / limit),
+        },
+    };
+};
+
+// ============================================================
 // 1. Tạo Lab Orders (BS khám gọi khi bấm "Gửi yêu cầu XN")
 // ============================================================
 export const createLabOrders = async (recordId, doctorId, labOrders) => {
