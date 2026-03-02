@@ -9,6 +9,7 @@ import gmailRouter from './routes/gmailRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import doctorRouter from './routes/doctorRoutes.js';
 import patientRouter from "./routes/patientRoutes.js";
+import userRouter from "./routes/userRoutes.js";
 import cors from 'cors';
 
 
@@ -29,10 +30,9 @@ app.use('/base', baseRouter);
 app.use('/doctor', doctorRouter);
 app.use('/auth', authRouter);
 app.use('/gmail', gmailRouter);
-
 app.use("/patients", patientRouter);
 app.use('/appointment', appointmentRouter);
-
+app.use("/users", userRouter);
 app.use(errorHandler);
 
 export default app;
