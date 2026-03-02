@@ -1,0 +1,289 @@
+import { supabase } from "../supabaseClient.js";
+import { AppError } from "../utils/app-error.js";
+
+// ============================================================
+// 0. Lấy tất cả Lab Orders (filter + phân trang)
+// ============================================================
+export const getAllLabOrders = async (query = {}) => {
+    const { status, record_id, patient_id, page = 1, limit = 20 } = query;
+
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let qb = supabase
+        .from('LabOrders')
+        .select(`
+            *,
+            MedicalRecords (
+                record_id,
+                Patients (
+                    patient_id,
+                    dob,
+                    gender,
+                    Users (full_name, phone_number)
+                ),
+                Doctors (
+                    Users (full_name)
+                ),
+                Appointments (appointment_id, appointment_date)
+            )
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+    if (status) {
+        qb = qb.eq('status', status);
+    }
+
+    if (record_id) {
+        qb = qb.eq('record_id', record_id);
+    }
+
+    if (patient_id) {
+        qb = qb.eq('MedicalRecords.Patients.patient_id', patient_id);
+    }
+
+    const { data, error, count } = await qb;
+
+    if (error) throw new AppError(error.message, 500);
+
+    return {
+        lab_orders: data,
+        pagination: {
+            page: Number(page),
+            limit: Number(limit),
+            total: count,
+            total_pages: Math.ceil(count / limit),
+        },
+    };
+};
+
+// ============================================================
+// 1. Tạo Lab Orders (BS khám gọi khi bấm "Gửi yêu cầu XN")
+// ============================================================
+export const createLabOrders = async (recordId, doctorId, labOrders) => {
+    const { data: record, error: recordError } = await supabase
+        .from('MedicalRecords')
+        .select('*, Appointments(status, doctor_id)')
+        .eq('record_id', recordId)
+        .single();
+
+    if (recordError || !record) {
+        throw new AppError('Medical record not found', 404);
+    }
+
+    if (record.Appointments.doctor_id !== doctorId) {
+        throw new AppError('You do not have permission to add lab orders to this record', 403);
+    }
+
+    if (record.Appointments.status !== 'in_progress') {
+        throw new AppError(`Cannot add lab orders. Appointment is ${record.Appointments.status}`, 400);
+    }
+
+    if (!Array.isArray(labOrders) || labOrders.length === 0) {
+        throw new AppError('At least one lab order is required', 400);
+    }
+
+    const validOrders = labOrders
+        .filter(l => l.test_name && l.test_name.trim())
+        .map(l => ({
+            record_id: recordId,
+            test_name: l.test_name.trim(),
+            status: 'ordered'
+        }));
+
+    if (validOrders.length === 0) {
+        throw new AppError('All lab orders must have a test_name', 400);
+    }
+
+    const { data: newOrders, error: insertError } = await supabase
+        .from('LabOrders')
+        .insert(validOrders)
+        .select();
+
+    if (insertError) throw new AppError(insertError.message, 500);
+
+    return newOrders;
+};
+
+// ============================================================
+// 2. Danh sách cuộc hẹn có lab orders hôm nay (BS xét nghiệm)
+// ============================================================
+export const getTodayLabOrders = async (dateStr) => {
+    const today = dateStr || new Date().toISOString().split('T')[0];
+
+    const { data: appointments, error } = await supabase
+        .from('Appointments')
+        .select(`
+            appointment_id,
+            appointment_date,
+            start_time,
+            end_time,
+            status,
+            Patients (
+                patient_id,
+                dob,
+                gender,
+                Users (full_name, phone_number)
+            ),
+            Doctors (
+                Users (full_name)
+            ),
+            MedicalRecords (
+                record_id,
+                LabOrders (lab_order_id, test_name, status, created_at)
+            )
+        `)
+        .eq('appointment_date', today);
+
+    if (error) throw new AppError(error.message, 500);
+
+    // Filter: chỉ giữ appointments có ít nhất 1 lab order
+    const withLabOrders = appointments
+        .filter(appt => {
+            const record = appt.MedicalRecords;
+            return record && record.LabOrders && record.LabOrders.length > 0;
+        })
+        .map(appt => {
+            const record = appt.MedicalRecords;
+            const labs = record.LabOrders || [];
+
+            return {
+                appointment_id: appt.appointment_id,
+                appointment_date: appt.appointment_date,
+                start_time: appt.start_time,
+                end_time: appt.end_time,
+                appointment_status: appt.status,
+                patient: {
+                    patient_id: appt.Patients?.patient_id,
+                    full_name: appt.Patients?.Users?.full_name,
+                    phone_number: appt.Patients?.Users?.phone_number,
+                    dob: appt.Patients?.dob,
+                    gender: appt.Patients?.gender,
+                },
+                referring_doctor: appt.Doctors?.Users?.full_name || null,
+                record_id: record.record_id,
+                lab_summary: {
+                    total: labs.length,
+                    ordered: labs.filter(l => l.status === 'ordered').length,
+                    processing: labs.filter(l => l.status === 'processing').length,
+                    completed: labs.filter(l => l.status === 'completed').length,
+                },
+                lab_orders: labs.map(l => ({
+                    lab_order_id: l.lab_order_id,
+                    test_name: l.test_name,
+                    status: l.status,
+                    created_at: l.created_at,
+                })),
+            };
+        });
+
+    return withLabOrders;
+};
+
+// ============================================================
+// 3. Chi tiết 1 lab order (BS xét nghiệm xem + cập nhật)
+// ============================================================
+export const getLabOrderById = async (labOrderId) => {
+    const { data, error } = await supabase
+        .from('LabOrders')
+        .select(`
+            *,
+            MedicalRecords (
+                record_id,
+                doctor_id,
+                symptoms,
+                diagnosis,
+                Patients (
+                    patient_id,
+                    dob,
+                    gender,
+                    allergies,
+                    Users (full_name, phone_number)
+                ),
+                Doctors (
+                    Users (full_name)
+                ),
+                Appointments (appointment_id, appointment_date, start_time, status)
+            )
+        `)
+        .eq('lab_order_id', labOrderId)
+        .single();
+
+    if (error) {
+        if (error.code === 'PGRST116') {
+            throw new AppError('Lab order not found', 404);
+        }
+        throw new AppError(error.message, 500);
+    }
+
+    return data;
+};
+
+// ============================================================
+// 4. Cập nhật lab order (BS xét nghiệm cập nhật kết quả)
+//    - Cho phép update: status, result_summary, result_file_url
+// ============================================================
+export const updateLabOrder = async (labOrderId, updateData) => {
+    // Chỉ cho phép update các field hợp lệ
+    const allowedFields = ['status', 'result_summary', 'result_file_url'];
+    const sanitized = {};
+    for (const key of allowedFields) {
+        if (updateData[key] !== undefined) {
+            sanitized[key] = updateData[key];
+        }
+    }
+
+    if (Object.keys(sanitized).length === 0) {
+        throw new AppError('No valid fields to update. Allowed: status, result_summary, result_file_url', 400);
+    }
+
+    // Validate status transition: ordered → processing → completed
+    if (sanitized.status) {
+        const validStatuses = ['ordered', 'processing', 'completed'];
+        if (!validStatuses.includes(sanitized.status)) {
+            throw new AppError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`, 400);
+        }
+
+        // Check current status for valid transition
+        const { data: current, error: fetchError } = await supabase
+            .from('LabOrders')
+            .select('status')
+            .eq('lab_order_id', labOrderId)
+            .single();
+
+        if (fetchError || !current) {
+            throw new AppError('Lab order not found', 404);
+        }
+
+        const transitionMap = {
+            ordered: ['processing'],
+            processing: ['completed'],
+            completed: [],
+        };
+
+        const allowed = transitionMap[current.status] || [];
+        if (!allowed.includes(sanitized.status)) {
+            throw new AppError(
+                `Cannot transition from '${current.status}' to '${sanitized.status}'. Allowed: ${allowed.join(', ') || 'none'}`,
+                400
+            );
+        }
+    }
+
+    const { data, error } = await supabase
+        .from('LabOrders')
+        .update(sanitized)
+        .eq('lab_order_id', labOrderId)
+        .select()
+        .single();
+
+    if (error) {
+        if (error.code === 'PGRST116') {
+            throw new AppError('Lab order not found', 404);
+        }
+        throw new AppError(error.message, 500);
+    }
+
+    return data;
+};

@@ -64,7 +64,7 @@ export const updateDoctor = asyncHandler(async (req, res, next) => {
     });
 });
 
-export const getAppointments = asyncHandler(async (req, res, next) => {
+export const getAppointmentsByDoctorId = asyncHandler(async (req, res, next) => {
     const { doctorId } = req.params;
     const { date, status } = req.query; // Filter query params
 
@@ -72,7 +72,7 @@ export const getAppointments = asyncHandler(async (req, res, next) => {
         return next(new AppError('Doctor ID is required', 400));
     }
 
-    const appointments = await doctorService.getDoctorAppointments(doctorId, { date, status });
+    const appointments = await doctorService.getDoctorAppointmentsByDoctorId(doctorId, { date, status });
 
     res.status(200).json({
         status: 'success',

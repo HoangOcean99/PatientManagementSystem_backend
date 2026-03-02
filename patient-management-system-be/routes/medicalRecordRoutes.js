@@ -1,0 +1,25 @@
+import express from 'express';
+import { 
+    startExamination, 
+    completeExamination,
+    getMedicalRecordById, 
+    getMedicalRecordByAppointment, 
+    getMedicalRecordsByPatient, 
+    updateMedicalRecord 
+} from '../controllers/medicalRecordController.js';
+
+const router = express.Router();
+
+// 1. Action APIs
+router.post('/start/:appointmentId', startExamination);       // Bắt đầu khám (tạo record)
+router.post('/complete/:recordId', completeExamination); // Hoàn thành khám (khoá record)
+
+// 2. Querying APIs
+router.get('/detail/:recordId', getMedicalRecordById);
+router.get('/appointment/:appointmentId', getMedicalRecordByAppointment);
+router.get('/patient/:patientId', getMedicalRecordsByPatient);  // Xem toàn bộ lịch sử bệnh án
+
+// 3. Update API
+router.patch('/update/:recordId', updateMedicalRecord);
+
+export default router;

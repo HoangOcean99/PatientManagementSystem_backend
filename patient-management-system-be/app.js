@@ -11,6 +11,8 @@ import doctorRouter from './routes/doctorRoutes.js';
 import patientRouter from "./routes/patientRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import cors from 'cors';
+import medicalRecordRouter from './routes/medicalRecordRoutes.js';
+import labOrderRouter from './routes/labOrderRoutes.js';
 
 
 import appointmentRouter from './routes/appointmentRoutes.js';
@@ -33,6 +35,10 @@ app.use('/gmail', gmailRouter);
 app.use("/patients", patientRouter);
 app.use('/appointment', appointmentRouter);
 app.use("/users", userRouter);
+app.use('/medical-record', medicalRecordRouter);
+app.use('/lab-orders', labOrderRouter);
+
+
 app.use(errorHandler);
 
 export default app;
