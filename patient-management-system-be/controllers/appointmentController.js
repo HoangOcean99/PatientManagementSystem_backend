@@ -23,7 +23,7 @@ export const createAppointment = asyncHandler(async (req, res) => {
 export const updateOrReschedule = asyncHandler(async (req, res) => {
   const { appointment_id, updates, currentUser} = req.body;
   await appointmentService.updateOrReschedule( appointment_id, updates, currentUser);
-      res.status(200).json({
+  return res.status(200).json({ 
       message: "Cập nhật lịch hẹn thành công"
     });
 })

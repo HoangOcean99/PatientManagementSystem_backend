@@ -5,4 +5,5 @@ const appointmentRouter = express.Router();
 
 appointmentRouter.get('/getList', getListAppointments);
 appointmentRouter.post('/create', createAppointment);
+appointmentRouter.post('/update', createAppointment);
 export default appointmentRouter;
