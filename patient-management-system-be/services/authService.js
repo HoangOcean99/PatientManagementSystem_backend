@@ -98,8 +98,7 @@ export const syncUserGoogle = async (user) => {
         .from('Users')
         .select('role')
         .eq('user_id', user.id)
-        .single();
-
+        .maybeSingle();
     if (error) {
         throw error;
     }
