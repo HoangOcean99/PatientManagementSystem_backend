@@ -27,10 +27,9 @@ export const updateDoctorValidator = [
         .trim()
         .notEmpty().withMessage('Specialization cannot be empty'),
     
-    body('room_number')
+    body('room_id')
         .optional()
-        .trim()
-        .notEmpty().withMessage('Room number cannot be empty'),
+        .isUUID().withMessage('Room ID must be a valid UUID'),
     
     body('status')
         .optional()

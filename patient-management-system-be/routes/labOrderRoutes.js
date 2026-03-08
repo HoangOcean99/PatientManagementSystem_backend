@@ -2,7 +2,6 @@ import express from 'express';
 import {
     getAllLabOrders,
     createLabOrders,
-    getTodayLabOrders,
     getLabOrderById,
     updateLabOrder
 } from '../controllers/labOrderController.js';
@@ -15,10 +14,7 @@ router.get('/', getAllLabOrders);
 // 1. BS khám — tạo yêu cầu xét nghiệm
 router.post('/', createLabOrders);
 
-// 2. BS xét nghiệm — danh sách cuộc hẹn có XN hôm nay
-router.get('/today', getTodayLabOrders);
-
-// 3. BS xét nghiệm — chi tiết + cập nhật 1 xét nghiệm
+// 2. BS xét nghiệm — chi tiết + cập nhật 1 xét nghiệm
 router.get('/:labOrderId', getLabOrderById);
 router.patch('/:labOrderId', updateLabOrder);
 

@@ -9,7 +9,7 @@ export const getAllDoctors = async () => {
             doctor_id,
             specialization,
             bio,
-            room_number,
+            room_id,
             Users (
                 user_id,
                 full_name,
@@ -17,6 +17,14 @@ export const getAllDoctors = async () => {
                 phone_number,
                 avatar_url,
                 status
+            ),
+            Rooms (
+                room_id,
+                room_number
+            ),
+            Departments (
+                department_id,
+                name
             )
         `);
 
@@ -32,7 +40,7 @@ export const getDoctorById = async (doctorId) => {
             doctor_id,
             specialization,
             bio,
-            room_number,
+            room_id,
             Users (
                 user_id,
                 full_name,
@@ -40,6 +48,14 @@ export const getDoctorById = async (doctorId) => {
                 phone_number,
                 avatar_url,
                 status
+            ),
+            Rooms (
+                room_id,
+                room_number
+            ),
+            Departments (
+                department_id,
+                name
             )
         `)
         .eq('doctor_id', doctorId)
@@ -57,7 +73,7 @@ export const searchDoctors = async ({ name, specialization, status }) => {
             doctor_id,
             specialization,
             bio,
-            room_number,
+            room_id,
             Users!inner (
                 user_id,
                 full_name,
@@ -65,6 +81,14 @@ export const searchDoctors = async ({ name, specialization, status }) => {
                 phone_number,
                 avatar_url,
                 status
+            ),
+            Rooms (
+                room_id,
+                room_number
+            ),
+            Departments (
+                department_id,
+                name
             )
         `);
 
@@ -100,7 +124,7 @@ export const updateDoctor = async (doctorId, updateData) => {
     // 2. Tách dữ liệu cho 2 bảng
     const { 
         // Doctor fields
-        specialization, bio, room_number, 
+        specialization, bio, room_id, 
         // User fields
         full_name, phone_number, avatar_url, status 
     } = updateData;
@@ -108,7 +132,7 @@ export const updateDoctor = async (doctorId, updateData) => {
     const doctorUpdates = {};
     if (specialization !== undefined) doctorUpdates.specialization = specialization;
     if (bio !== undefined) doctorUpdates.bio = bio;
-    if (room_number !== undefined) doctorUpdates.room_number = room_number;
+    if (room_id !== undefined) doctorUpdates.room_id = room_id;
 
     const userUpdates = {};
     if (full_name !== undefined) userUpdates.full_name = full_name;
@@ -151,12 +175,17 @@ export const getDoctorAppointmentsByDoctorId = async (doctorId, { date, status }
         .from('Appointments')
         .select(`
             appointment_id,
-            appointment_date,
-            start_time,
-            end_time,
             status,
-            queue_number,
+            total_price,
+            deposit_required,
+            deposit_paid,
             created_at,
+            DoctorSlots (
+                slot_id,
+                slot_date,
+                start_time,
+                end_time
+            ),
             Patients (
                 patient_id,
                 dob,
@@ -187,8 +216,7 @@ export const getDoctorAppointmentsByDoctorId = async (doctorId, { date, status }
     }
 
     // Sort by date and time descending (newest first)
-    query = query.order('appointment_date', { ascending: false })
-                 .order('start_time', { ascending: false });
+    query = query.order('created_at', { ascending: false });
 
     const { data, error } = await query;
 
