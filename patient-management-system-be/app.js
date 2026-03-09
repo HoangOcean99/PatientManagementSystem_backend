@@ -12,7 +12,13 @@ import patientRouter from "./routes/patientRoutes.js";
 import cors from 'cors';
 
 
+
 import appointmentRouter from './routes/appointmentRoutes.js';
+import roomRouter from './routes/roomRoutes.js';
+import doctorSlotRouter from './routes/doctorSlotRoutes.js'; 
+import departmentRouter from './routes/departmentRoutes.js';
+import clinicServicesRouter from './routes/clinicRoutes.js';
+
 const app = express();
 
 app.use(cors({
@@ -29,10 +35,16 @@ app.use('/base', baseRouter);
 app.use('/doctor', doctorRouter);
 app.use('/auth', authRouter);
 app.use('/gmail', gmailRouter);
-
-app.use("/patients", patientRouter);
+app.use('/patients', patientRouter);
 app.use('/appointment', appointmentRouter);
+app.use('/room', roomRouter);
+app.use('/doctor-slots', doctorSlotRouter);
+app.use('/departments', departmentRouter);
+app.use('/clinic-services', clinicServicesRouter);
+app.use(express.json());
+
 
 app.use(errorHandler);
 
 export default app;
+  

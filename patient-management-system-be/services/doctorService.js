@@ -26,15 +26,15 @@ export const getAllDoctors = async () => {
 };
 
 export const getDoctorById = async (doctorId) => {
+    console.log(doctorId);
     const { data, error } = await supabase
         .from('Doctors')
         .select(`
             doctor_id,
             specialization,
             bio,
-            room_number,
-            Users (
-                user_id,
+            Rooms!inner( room_number, is_active),
+            Users!inner(
                 full_name,
                 email,
                 phone_number,
@@ -46,7 +46,7 @@ export const getDoctorById = async (doctorId) => {
         .single();
 
     if (error) throw new AppError(error.message, 500);
-    
+
     return data;
 };
 
@@ -98,11 +98,11 @@ export const updateDoctor = async (doctorId, updateData) => {
     }
 
     // 2. Tách dữ liệu cho 2 bảng
-    const { 
+    const {
         // Doctor fields
-        specialization, bio, room_number, 
+        specialization, bio, room_number,
         // User fields
-        full_name, phone_number, avatar_url, status 
+        full_name, phone_number, avatar_url, status
     } = updateData;
 
     const doctorUpdates = {};
@@ -188,7 +188,7 @@ export const getDoctorAppointments = async (doctorId, { date, status } = {}) => 
 
     // Sort by date and time descending (newest first)
     query = query.order('appointment_date', { ascending: false })
-                 .order('start_time', { ascending: false });
+        .order('start_time', { ascending: false });
 
     const { data, error } = await query;
 
