@@ -11,17 +11,26 @@
     "bcryptjs": "^3.0.3",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "debug": "~2.6.9",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.2.4",
     "express": "~4.16.1",
     "express-validator": "^7.3.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.4",
-    "morgan": "~1.9.1"
+    "morgan": "~1.9.1",
+    "nodemailer": "^8.0.1"
   },
   "devDependencies": {
+    "jest": "^30.2.0",
+    "nock": "^14.0.11",
     "nodemon": "^3.1.11",
-    "vitest": "^4.0.18"
+    "supertest": "^7.2.2"
   },
-  "type": "module"
+  "type": "module",
+  "main": "app.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }
