@@ -37,3 +37,23 @@ export const updateDoctorValidator = [
     
     validate
 ];
+
+export const createDoctorProfileValidator = [
+    body('specialization')
+        .trim()
+        .notEmpty().withMessage('Specialization is required'),
+
+    body('department_id')
+        .notEmpty().withMessage('Department ID is required')
+        .isUUID().withMessage('Department ID must be a valid UUID'),
+
+    body('room_id')
+        .notEmpty().withMessage('Room ID is required')
+        .isUUID().withMessage('Room ID must be a valid UUID'),
+
+    body('bio')
+        .optional()
+        .trim(),
+
+    validate
+];

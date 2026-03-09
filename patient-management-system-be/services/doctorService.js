@@ -1,32 +1,35 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 
-export const getAllDoctors = async () => {
+const DOCTOR_SELECT = `
+    doctor_id,
+    department_id,
+    room_id,
+    specialization,
+    bio,
+    Users (
+        user_id,
+        full_name,
+        email,
+        phone_number,
+        avatar_url,
+        status
+    ),
+    Rooms (
+        room_id,
+        room_number
+    ),
+    Departments (
+        department_id,
+        name,
+        description
+    )
+`;
 
+export const getAllDoctors = async () => {
     const { data, error } = await supabase
         .from('Doctors')
-        .select(`
-            doctor_id,
-            specialization,
-            bio,
-            room_id,
-            Users (
-                user_id,
-                full_name,
-                email,
-                phone_number,
-                avatar_url,
-                status
-            ),
-            Rooms (
-                room_id,
-                room_number
-            ),
-            Departments (
-                department_id,
-                name
-            )
-        `);
+        .select(DOCTOR_SELECT);
 
     if (error) throw new AppError(error.message, 500);
 
@@ -34,35 +37,15 @@ export const getAllDoctors = async () => {
 };
 
 export const getDoctorById = async (doctorId) => {
+
     const { data, error } = await supabase
         .from('Doctors')
-        .select(`
-            doctor_id,
-            specialization,
-            bio,
-            room_id,
-            Users (
-                user_id,
-                full_name,
-                email,
-                phone_number,
-                avatar_url,
-                status
-            ),
-            Rooms (
-                room_id,
-                room_number
-            ),
-            Departments (
-                department_id,
-                name
-            )
-        `)
+        .select(DOCTOR_SELECT)
         .eq('doctor_id', doctorId)
         .single();
 
     if (error) throw new AppError(error.message, 500);
-    
+
     return data;
 };
 
@@ -71,9 +54,10 @@ export const searchDoctors = async ({ name, specialization, status }) => {
         .from('Doctors')
         .select(`
             doctor_id,
+            department_id,
+            room_id,
             specialization,
             bio,
-            room_id,
             Users!inner (
                 user_id,
                 full_name,
@@ -88,7 +72,8 @@ export const searchDoctors = async ({ name, specialization, status }) => {
             ),
             Departments (
                 department_id,
-                name
+                name,
+                description
             )
         `);
 
@@ -104,7 +89,6 @@ export const searchDoctors = async ({ name, specialization, status }) => {
         query = query.eq('Users.status', status);
     }
 
-    // Sort by full_name in foreign table Users
     query = query.order('full_name', { foreignTable: 'Users', ascending: true });
 
     const { data, error } = await query;
@@ -115,24 +99,24 @@ export const searchDoctors = async ({ name, specialization, status }) => {
 };
 
 export const updateDoctor = async (doctorId, updateData) => {
-    // 1. Kiểm tra bác sĩ có tồn tại không
     const existingDoctor = await getDoctorById(doctorId);
     if (!existingDoctor) {
         throw new AppError('No doctor found with that ID', 404);
     }
 
-    // 2. Tách dữ liệu cho 2 bảng
-    const { 
+    // Tách dữ liệu cho bảng Doctors và Users
+    const {
         // Doctor fields
-        specialization, bio, room_id, 
+        specialization, bio, room_id, department_id,
         // User fields
-        full_name, phone_number, avatar_url, status 
+        full_name, phone_number, avatar_url, status
     } = updateData;
 
     const doctorUpdates = {};
     if (specialization !== undefined) doctorUpdates.specialization = specialization;
     if (bio !== undefined) doctorUpdates.bio = bio;
     if (room_id !== undefined) doctorUpdates.room_id = room_id;
+    if (department_id !== undefined) doctorUpdates.department_id = department_id;
 
     const userUpdates = {};
     if (full_name !== undefined) userUpdates.full_name = full_name;
@@ -140,7 +124,6 @@ export const updateDoctor = async (doctorId, updateData) => {
     if (avatar_url !== undefined) userUpdates.avatar_url = avatar_url;
     if (status !== undefined) userUpdates.status = status;
 
-    // 3. Thực hiện Update song song (Parallel)
     const updatePromises = [];
 
     if (Object.keys(doctorUpdates).length > 0) {
@@ -150,25 +133,64 @@ export const updateDoctor = async (doctorId, updateData) => {
     }
 
     if (Object.keys(userUpdates).length > 0) {
-        // Với Schema hiện tại, doctor_id chính là user_id (Quan hệ 1-1)
+        // doctor_id === user_id (quan hệ 1-1: Users → Doctors)
         updatePromises.push(
             supabase.from('Users').update(userUpdates).eq('user_id', doctorId)
         );
     }
 
-    // Chờ tất cả update hoàn tất
     if (updatePromises.length > 0) {
         const results = await Promise.all(updatePromises);
-        // Check lỗi của từng promise
         for (const res of results) {
             if (res.error) throw new AppError(res.error.message, 500);
         }
     }
 
-    // 4. Trả về dữ liệu mới nhất sau khi update
     return await getDoctorById(doctorId);
 };
 
+export const createDoctorProfile = async (userId, profileData) => {
+    // 1. Kiểm tra user tồn tại và có role 'doctor'
+    const { data: user, error: userError } = await supabase
+        .from('Users')
+        .select('user_id, role')
+        .eq('user_id', userId)
+        .single();
+
+    if (userError || !user) throw new AppError('User not found', 404);
+    if (user.role !== 'doctor') throw new AppError('User is not assigned the doctor role', 403);
+
+    // 2. Kiểm tra profile đã tồn tại chưa (tránh tạo duplicate)
+    const { data: existing } = await supabase
+        .from('Doctors')
+        .select('doctor_id')
+        .eq('doctor_id', userId)
+        .single();
+
+    if (existing) throw new AppError('Doctor profile already exists. Use update instead.', 409);
+
+    // 3. Validate required fields theo schema (specialization, department_id, room_id là NOT NULL)
+    const { specialization, department_id, room_id, bio } = profileData;
+
+    if (!specialization) throw new AppError('Specialization is required', 400);
+    if (!department_id) throw new AppError('Department ID is required', 400);
+    if (!room_id) throw new AppError('Room ID is required', 400);
+
+    // 4. Insert vào bảng Doctors (doctor_id = user_id, quan hệ 1-1)
+    const { error: insertError } = await supabase
+        .from('Doctors')
+        .insert([{
+            doctor_id: userId,
+            specialization,
+            department_id,
+            room_id,
+            bio: bio ?? null,
+        }]);
+
+    if (insertError) throw new AppError(insertError.message, 500);
+
+    return await getDoctorById(userId);
+};
 
 export const getDoctorAppointmentsByDoctorId = async (doctorId, { date, status } = {}) => {
     let query = supabase
@@ -206,21 +228,19 @@ export const getDoctorAppointmentsByDoctorId = async (doctorId, { date, status }
         `)
         .eq('doctor_id', doctorId);
 
-    // Optional filters
-    if (date) {
-        query = query.eq('appointment_date', date);
-    }
-
     if (status) {
         query = query.eq('status', status);
     }
 
-    // Sort by date and time descending (newest first)
     query = query.order('created_at', { ascending: false });
 
     const { data, error } = await query;
 
     if (error) throw new AppError(error.message, 500);
+
+    if (date && data) {
+        return data.filter(appt => appt.DoctorSlots?.slot_date === date);
+    }
 
     return data;
 };
