@@ -16,6 +16,9 @@ import labOrderRouter from './routes/labOrderRoutes.js';
 
 
 import appointmentRouter from './routes/appointmentRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
+import serviceRoutes from './routes/ClinicServicesRoutes.js';
+import systemConfigRoutes from './routes/systemConfigRoutes.js';
 const app = express();
 
 app.use(cors({
@@ -37,6 +40,10 @@ app.use('/appointment', appointmentRouter);
 app.use("/users", userRouter);
 app.use('/medical-record', medicalRecordRouter);
 app.use('/lab-orders', labOrderRouter);
+app.use('/department', departmentRoutes);
+app.use('/clinic-service', serviceRoutes);
+app.use('/system-config', systemConfigRoutes);
+
 
 
 app.use(errorHandler);
