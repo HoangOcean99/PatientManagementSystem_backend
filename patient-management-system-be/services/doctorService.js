@@ -1,7 +1,10 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 
-const DOCTOR_SELECT = `
+export const getAllDoctors = async () => {
+    const { data, error } = await supabase
+        .from('Doctors')
+        .select(`
     doctor_id,
     department_id,
     room_id,
@@ -24,12 +27,8 @@ const DOCTOR_SELECT = `
         name,
         description
     )
-`;
+`);
 
-export const getAllDoctors = async () => {
-    const { data, error } = await supabase
-        .from('Doctors')
-        .select(DOCTOR_SELECT);
 
     if (error) throw new AppError(error.message, 500);
 
@@ -40,7 +39,30 @@ export const getDoctorById = async (doctorId) => {
 
     const { data, error } = await supabase
         .from('Doctors')
-        .select(DOCTOR_SELECT)
+        .select(`
+    doctor_id,
+    department_id,
+    room_id,
+    specialization,
+    bio,
+    Users (
+        user_id,
+        full_name,
+        email,
+        phone_number,
+        avatar_url,
+        status
+    ),
+    Rooms (
+        room_id,
+        room_number
+    ),
+    Departments (
+        department_id,
+        name,
+        description
+    )
+`)
         .eq('doctor_id', doctorId)
         .single();
 
@@ -169,23 +191,24 @@ export const createDoctorProfile = async (userId, profileData) => {
 
     if (existing) throw new AppError('Doctor profile already exists. Use update instead.', 409);
 
-    // 3. Validate required fields theo schema (specialization, department_id, room_id là NOT NULL)
-    const { specialization, department_id, room_id, bio } = profileData;
+    // 3. Validate required fields: specialization và department_id là bắt buộc; room_id là optional (do admin assign sau)
+    const { specialization, department_id, bio, room_id } = profileData;
 
     if (!specialization) throw new AppError('Specialization is required', 400);
     if (!department_id) throw new AppError('Department ID is required', 400);
-    if (!room_id) throw new AppError('Room ID is required', 400);
 
     // 4. Insert vào bảng Doctors (doctor_id = user_id, quan hệ 1-1)
+    const insertData = {
+        doctor_id: userId,
+        specialization,
+        department_id,
+        bio: bio ?? null,
+    };
+    if (room_id) insertData.room_id = room_id;
+
     const { error: insertError } = await supabase
         .from('Doctors')
-        .insert([{
-            doctor_id: userId,
-            specialization,
-            department_id,
-            room_id,
-            bio: bio ?? null,
-        }]);
+        .insert([insertData]);
 
     if (insertError) throw new AppError(insertError.message, 500);
 

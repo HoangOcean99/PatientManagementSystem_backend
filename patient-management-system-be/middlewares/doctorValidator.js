@@ -48,7 +48,7 @@ export const createDoctorProfileValidator = [
         .isUUID().withMessage('Department ID must be a valid UUID'),
 
     body('room_id')
-        .notEmpty().withMessage('Room ID is required')
+        .optional()
         .isUUID().withMessage('Room ID must be a valid UUID'),
 
     body('bio')
