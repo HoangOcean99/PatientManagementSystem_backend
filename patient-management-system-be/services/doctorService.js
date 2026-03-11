@@ -2,21 +2,19 @@ import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 
 export const getAllDoctors = async () => {
-
     const { data, error } = await supabase
         .from('Doctors')
         .select(`
             doctor_id,
             specialization,
             bio,
-            room_number,
             Users (
                 user_id,
                 full_name,
                 email,
                 phone_number,
                 avatar_url,
-                status
+                status  
             )
         `);
 
@@ -191,6 +189,21 @@ export const getDoctorAppointments = async (doctorId, { date, status } = {}) => 
         .order('start_time', { ascending: false });
 
     const { data, error } = await query;
+
+    if (error) throw new AppError(error.message, 500);
+
+    return data;
+};
+
+export const getDoctorByDepartmentId = async (departmentId) => {
+    const { data, error } = await supabase
+        .from('Doctors')
+        .select(`
+        doctor_id,
+        Departments!inner ( department_id, name ),
+        Users!inner ( user_id, full_name, email, phone_number, avatar_url, status)
+        `)
+        .eq('department_id', departmentId);
 
     if (error) throw new AppError(error.message, 500);
 

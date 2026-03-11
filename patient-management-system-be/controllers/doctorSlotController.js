@@ -2,6 +2,7 @@ import * as doctorSlotService from "../services/doctorSlotService.js";
 import * as doctorService from "../services/doctorService.js";
 import { AppError } from "../utils/app-error.js";
 
+
 export const getListDoctorSlots = async (req, res) => {
     const doctorSlots = await doctorSlotService.getListDoctorSlots();
     res.status(200).json(doctorSlots);
@@ -12,7 +13,7 @@ export const getDoctorSlotById = async (req, res) => {
     res.status(200).json(doctorSlot);
 }  
 
-export const getAvailableDoctorSlotsInMonth = async (req, res, next) => {
+export const getAvailableDoctorSlotsByDoctorIdAndDate = async (req, res, next) => {  
     try {
         const { doctor_id, start_date, end_date } = req.body;
 
@@ -21,7 +22,7 @@ export const getAvailableDoctorSlotsInMonth = async (req, res, next) => {
             return res.status(400).json({ message: "Thiếu thông tin doctor_id, start_date hoặc end_date!" });
         }
 
-        const availableDoctorSlots = await doctorSlotService.getAvailableDoctorSlotsInMonth(doctor_id, start_date, end_date);
+        const availableDoctorSlots = await doctorSlotService.getAvailableDoctorSlotsByDoctorIdAndDate(doctor_id, start_date, end_date);
 
         res.status(200).json({
             success: true,

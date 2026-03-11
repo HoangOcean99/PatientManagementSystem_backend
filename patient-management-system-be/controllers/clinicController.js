@@ -25,4 +25,10 @@ const clinicServicesController = {
   getPriceByServiceId,
 }; 
 
+export const getClinicServicesByDepartmentId = asyncHandler(async (req, res) => {
+  const { departmentId } = req.params;
+  const clinicServices = await clinicServicesService.getClinicServicesByDepartmentId(departmentId);
+  res.status(200).json(clinicServices);
+});
+ 
 export default clinicServicesController; 

@@ -16,7 +16,7 @@ const isValidTime = (timeString) => {
   const regex = /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/;
   return timeString.match(regex) !== null;
 };
-//đọc file db.txt để lấy dữ liệu RỒI VIẾT HÀM getListAppointments VÀO ĐÂY
+
 export const getListAppointments = async (date) => {
   let query = supabase.from('Appointments').select(`
       appointment_id,
@@ -37,6 +37,25 @@ export const getListAppointments = async (date) => {
   return appointments.sort((a, b) =>
     a.DoctorSlots.start_time.localeCompare(b.DoctorSlots.start_time)
   );
+};
+    export const getListAppointmentsByStatus = async (status) => {
+  const { data: appointment, error } = await supabase
+    .from('Appointments ') 
+    .select(`
+     appointment_id,
+      status,
+      DoctorSlots!inner ( slot_id, start_time, end_time, slot_date),
+      Patients!inner ( patient_id, Users!inner ( full_name, email )),
+      Doctors!inner ( doctor_id, Users!inner ( full_name, email ) ),
+      ClinicServices!inner ( service_id, name, Departments!inner ( department_id, name ) )
+    `)
+    .eq('status', status )
+    
+
+  if (error || !appointment) { 
+    throw new AppError(error?.message || "Lịch khám không tồn tại", error?.statusCode || 404);
+  }
+  return appointment;
 };
 
 export const getListAppointmentsByAppointmentId = async (appointment_id) => {
@@ -140,7 +159,7 @@ export const createAppointment = async (patient_id, doctor_id, service_id, slot_
     .eq('slot_id', slot_id);
 
   if (updateError) {
-    // Nếu khóa thất bại, xóa luôn appointment vừa tạo để đảm bảo tính nhất quán
+    // Nếu khóa thất bại, xóa luôn appointment vừa tạo 
     await supabase.from('Appointments').delete().eq('appointment_id', newAppointment.appointment_id);
     throw new AppError("Lỗi hệ thống khi khóa khung giờ, hãy thử lại nhé", 500);
   }
@@ -157,16 +176,16 @@ export const rescheduleAppointment = async (appointment_id, new_slot_id, updates
       throw new AppError("Thiếu new_slot_id (slot_id khung giờ mới)", 400);
     }
 
-    // 1. Kiểm tra tồn tại và lấy thông tin
+    //lấy thông tin
     const { data: appointment, error: fetchError } = await supabase
       .from('Appointments')
       .select('status, slot_id')
       .eq('appointment_id', appointment_id)
       .single();
-
+    
     if (fetchError || !appointment) throw new AppError('Lịch khám không tồn tại', 404);
 
-    // 2. Kiểm tra slot mới
+    // Kiểm tra slot mới
     const { data: newSlot, error: slotCheckError } = await supabase
       .from('DoctorSlots')
       .select('is_booked')
@@ -183,7 +202,7 @@ export const rescheduleAppointment = async (appointment_id, new_slot_id, updates
     }
     if (newSlot.is_booked) throw new AppError('Khung giờ mới đã có người đặt', 400);
 
-    // 3. Đặt giữ slot mới trước (tránh giải phóng slot cũ rồi update Appointment bị fail)
+    //Đặt giữ slot mới trước (tránh giải phóng slot cũ rồi update Appointment bị fail)
     const { data: bookedRows, error: bookNewSlotError } = await supabase
       .from('DoctorSlots')
       .update({ is_booked: true })
@@ -195,13 +214,11 @@ export const rescheduleAppointment = async (appointment_id, new_slot_id, updates
       throw new AppError(`Lỗi hệ thống khi giữ khung giờ mới: ${bookNewSlotError.message}`, 500);
     }
     if (!bookedRows || bookedRows.length === 0) {
-      // Slot vừa bị người khác đặt ngay trước khi mình update
       throw new AppError('Khung giờ mới đã có người đặt', 400);
     }
 
-    // 4. Reschedule chỉ nên đổi slot (và status). Bỏ qua các field lạ như department_id để tránh lỗi schema.
-    // Nếu sau này muốn cho phép update thêm field, hãy thêm vào allowlist dưới đây.
-    const allowedExtraFields = []; // intentionally empty for safety
+    // 4. Reschedule chỉ nên đổi slot (và status). 
+    const allowedExtraFields = [];
     const safeExtraUpdates = {};
     if (updates && typeof updates === 'object') {
       for (const key of allowedExtraFields) {
@@ -262,7 +279,7 @@ export const rescheduleAppointment = async (appointment_id, new_slot_id, updates
 }
 
 export const cancelAppointment = async (appointment_id, currentUser) => {
-  // 1. Lấy thông tin lịch hiện tại
+  // Lấy thông tin lịch hiện tại
   const { data: appt, error: fetchError } = await supabase
     .from('Appointments')
     .select('status, slot_id, patient_id')
@@ -275,7 +292,7 @@ export const cancelAppointment = async (appointment_id, currentUser) => {
     throw new AppError('Lịch này đã bị hủy hoặc đã hoàn thành', 400);
   }
 
-  // 2. Cập nhật status thành 'cancelled' (Chuẩn Enum)
+
   const { error: cancelError } = await supabase
     .from('Appointments')
     .update({ status: 'cancelled' })
@@ -283,11 +300,10 @@ export const cancelAppointment = async (appointment_id, currentUser) => {
 
   if (cancelError) throw new AppError('Lỗi khi hủy lịch', 500);
 
-  // 3. QUAN TRỌNG: Giải phóng slot trống cho người khác đặt
+  // Giải phóng slot trống cho người khác đặt
   if (appt.slot_id) {
     await supabase.from('DoctorSlots').update({ is_booked: false }).eq('slot_id', appt.slot_id);
   }
-
   return { message: "Hủy lịch thành công, đã giải phóng khung giờ." };
 };
 
@@ -351,7 +367,7 @@ export const approveAppointment = async (appointment_id, deposit_paid, currentUs
     .single();
 
   if (updateError) {
-    console.error("🚨 LỖI SUPABASE TRẢ VỀ:", updateError); // In lỗi chi tiết ra Terminal
+    console.error("Lỗi supabase trả về:", updateError);
     throw new AppError(`Cập nhật thất bại: ${updateError.message}`, 400);
   }
 

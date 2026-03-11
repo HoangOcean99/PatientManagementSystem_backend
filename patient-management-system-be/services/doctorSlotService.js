@@ -21,47 +21,62 @@ export const getDoctorSlotById = async (slot_id) => {
     .single();
   if (error) throw new AppError(error.message, 500);
   return data || null || undefined || [];
-}
+} 
 
-export const getAvailableDoctorSlotsInMonth = async (doctor_id, start_date, end_date) => {
-  const { data: slots, error } = await supabase.from('DoctorSlots').select(
-    'slot_id, slot_date, start_time, end_time, Appointments(appointment_id,status)')
+export const getAvailableDoctorSlotsByDoctorIdAndDate = async (doctor_id, start_date, end_date) => {
+  // 1. Lấy thời điểm hiện tại để lọc bỏ các slot trong quá khứ (ngay cả khi trong cùng ngày)
+  const now = new Date().toISOString();
+
+  const { data: slots, error } = await supabase
+    .from('DoctorSlots')
+    .select('slot_id, slot_date, start_time, end_time, Appointments(appointment_id, status)')
     .eq('doctor_id', doctor_id)
-    .gte('slot_date', start_date) // Lớn hơn hoặc bằng ngày bắt đầu
-    .lte('slot_date', end_date) // Nhỏ hơn hoặc bằng ngày kết thúc
-    .eq('is_booked', false);
+    .gte('slot_date', start_date)
+    .lte('slot_date', end_date)
+    .eq('is_booked', false)
+    // Tối ưu 1: Sắp xếp ngay từ DB giúp Frontend không cần sort lại
+    .order('slot_date', { ascending: true })
+    .order('start_time', { ascending: true });
 
   if (error) throw new Error(error.message);
 
-  // Lọc ra NHỮNG SLOT TRỐNG (chưa có appointment hoặc appointment đã bị cancel)
-  const avaibleSlots = slots.filter(slot => {
-    // Nếu slot.Appointments không tồn tại hoặc không phải là mảng, coi như nó không có lịch hẹn nào (trả về false)
-    if (!Array.isArray(slot.Appointments)) {
-      return true; // Giữ lại vì nó trống (không có lịch hẹn)
-    }
-    const hasActiveAppointment = slot.Appointments.some(
+  const availableSlots = slots.filter(slot => {
+    // Tối ưu 2: Lọc bỏ slot nếu giờ bắt đầu đã trôi qua (so với thời điểm hiện tại)
+    const slotDateTime = new Date(`${slot.slot_date}T${slot.start_time}`);
+    if (slotDateTime < new Date()) return false;
+
+    // Tối ưu 3: Xử lý quan hệ 1-nhiều hoặc 1-1 của Appointments một cách an toàn
+    const appointments = Array.isArray(slot.Appointments)
+      ? slot.Appointments
+      : (slot.Appointments ? [slot.Appointments] : []);
+
+    const hasActiveAppointment = appointments.some(
       app => app.status === 'pending' || app.status === 'upcoming'
     );
+
     return !hasActiveAppointment;
-  })
-  // GOM NHÓM DỮ LIỆU THEO NGÀY
-  const groupedSlots = avaibleSlots.reduce((acc, slot) => {
-    if (!acc[slot.slot_date]) {
-      acc[slot.slot_date] = [];
+  });
+
+  // Tối ưu 4: Dùng reduce để gom nhóm (giữ nguyên logic cũ nhưng chạy trên data đã sạch)
+  const groupedSlots = availableSlots.reduce((acc, slot) => {
+    const dateKey = slot.slot_date;
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
     }
-    acc[slot.slot_date].push({
+    acc[dateKey].push({
       slot_id: slot.slot_id,
-      start_time: slot.start_time,
-      end_time: slot.end_time
+      // Format lại giờ chỉ lấy HH:mm cho gọn UI (ví dụ "08:30")
+      start_time: slot.start_time.substring(0, 5),
+      end_time: slot.end_time.substring(0, 5)
     });
     return acc;
-  }, {})
+  }, {});
 
   return groupedSlots;
-}
+};
 
 export const getAvailableDoctorSlotsInDay = async (doctorId, date) => {
-  // Tớ bổ sung thêm .eq('is_booked', false) để đảm bảo chỉ trả về slot trống
+  //.eq('is_booked', false) để đảm bảo chỉ trả về slot trống
   const { data, error } = await supabase
     .from('DoctorSlots')
     .select('slot_id, slot_date, start_time, end_time')
@@ -81,5 +96,5 @@ export const createDoctorSlot = async (doctor_id, slot_date, start_time, end_tim
     .select() // Lấy dữ liệu vừa tạo
     .single();
   if (createError) throw new AppError(createError.message, 500);
-  return newDoctorSlot; // Trả về dữ liệu vừa tạo
+  return newDoctorSlot;
 }

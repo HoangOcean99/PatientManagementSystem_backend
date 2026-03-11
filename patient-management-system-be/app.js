@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
-import path from 'path';
+import path from 'path';  
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import baseRouter from './routes/BaseRoutes.js';
@@ -10,7 +10,7 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import doctorRouter from './routes/doctorRoutes.js';
 import patientRouter from "./routes/patientRoutes.js";
 import cors from 'cors';
-
+import listEndpoints from 'express-list-endpoints';
 
 
 import appointmentRouter from './routes/appointmentRoutes.js';
@@ -45,6 +45,6 @@ app.use(express.json());
 
 
 app.use(errorHandler);
+//console.table(listEndpoints(app));
+export default app; 
 
-export default app;
-  

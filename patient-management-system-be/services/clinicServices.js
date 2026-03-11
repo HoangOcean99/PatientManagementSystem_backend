@@ -1,5 +1,5 @@
 import { supabase } from "../supabaseClient.js";
-import { AppError } from "../utils/app-error.js";  
+import { AppError } from "../utils/app-error.js";
 
 
 export const getListClinicServices = async () => {
@@ -33,3 +33,17 @@ export const getPriceByServiceId = async (service_id) => {
   }
   return serviceInfo.price;
 }
+
+export const getClinicServicesByDepartmentId = async (departmentId) => {
+  const { data, error } = await supabase
+    .from('ClinicServices')
+    .select(`
+    service_id,
+    name,
+    price,
+    Departments!inner ( department_id, name )
+    `)
+    .eq('Departments.department_id', departmentId);
+  if (error) throw new AppError(error.message, 500);
+  return data;
+};

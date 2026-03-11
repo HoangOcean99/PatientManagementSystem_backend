@@ -8,6 +8,12 @@ export const getListAppointments = asyncHandler(async (req, res) => {
   return res.json(response);
 });
 
+export const getListAppointmentsByStatus = asyncHandler(async (req, res) => {
+  const { status } = req.params;
+  const response = await appointmentService.getListAppointmentsByStatus(status);
+  return res.json(response);
+});
+
 // Trong controller/appointmentController.js
 export const createAppointmentForPatient = async (req, res, next) => {
   try {
@@ -44,7 +50,7 @@ export const cancelAppointment = asyncHandler(async (req, res) => {
 
 export const rescheduleAppointment = asyncHandler(async (req, res) => {
   const { appointment_id } = req.params;
-  
+
   // Accept common client payload variants (Postman hay frontend thường gửi khác key)
   const new_slot_id =
     req.body?.new_slot_id ??

@@ -80,3 +80,15 @@ export const getAppointments = asyncHandler(async (req, res, next) => {
         data: appointments
     });
 });
+
+export const getDoctorByDepartmentId = asyncHandler(async (req, res, next) => {
+    const { departmentId } = req.params;
+
+    const doctors = await doctorService.getDoctorByDepartmentId(departmentId);
+
+    res.status(200).json({
+        status: 'success',
+        results: doctors.length,
+        data: doctors
+    });
+});
