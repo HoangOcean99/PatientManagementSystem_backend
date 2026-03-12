@@ -16,6 +16,8 @@ import labOrderRouter from './routes/labOrderRoutes.js';
 
 
 import appointmentRouter from './routes/appointmentRoutes.js';
+import doctorAssignmentRouter from './routes/doctorAssignmentRoutes.js';
+import underMyCareRouter from './routes/underMyCareRoutes.js';
 const app = express();
 
 app.use(cors({
@@ -37,6 +39,8 @@ app.use('/appointment', appointmentRouter);
 app.use("/users", userRouter);
 app.use('/medical-record', medicalRecordRouter);
 app.use('/lab-orders', labOrderRouter);
+app.use('/doctor-assignments', doctorAssignmentRouter);
+app.use('/under-my-care', underMyCareRouter);
 
 
 app.use(errorHandler);

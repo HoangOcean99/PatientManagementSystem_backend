@@ -15,6 +15,35 @@ export const createPatient = async (payload) => {
   return data;
 };
 
+export const getPatientById = async (patientId) => {
+  const { data, error } = await supabase
+    .from("Patients")
+    .select(`
+      patient_id,
+      dob,
+      gender,
+      address,
+      allergies,
+      medical_history_summary,
+      Users (
+        full_name,
+        email,
+        phone_number,
+        avatar_url,
+        status,
+        role
+      )
+    `)
+    .eq("patient_id", patientId)
+    .single();
+
+  if (error || !data) {
+    throw new AppError("Patient not found", 404);
+  }
+
+  return data;
+};
+
 export const getPatientList = async ({
   keyword,
   gender,
@@ -86,7 +115,7 @@ export const updatePatient = async (patientId, payload) => {
   }
 
   // 2. Update Patients table
-  const patientFields = ["dob", "gender", "address"];
+  const patientFields = ["dob", "gender", "address", "allergies", "medical_history_summary"];
   const patientPayload = {};
 
   patientFields.forEach((key) => {
