@@ -2,9 +2,33 @@ import { get } from "mongoose";
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 export const createPatient = async (payload) => {
+  const { patient_id, dob, gender, address, allergies, medical_history_summary } = payload;
+
+  if (dob !== undefined || gender !== undefined || address !== undefined) {
+    const userPayload = {};
+    if (dob !== undefined) userPayload.dob = dob;
+    if (gender !== undefined) userPayload.gender = gender;
+    if (address !== undefined) userPayload.address = address;
+
+    const { error: userError } = await supabase
+      .from("Users")
+      .update(userPayload)
+      .eq("user_id", patient_id);
+
+    if (userError) {
+      throw new AppError("Failed to update user profile: " + userError.message, 500);
+    }
+  }
+
+  const patientPayload = {
+    patient_id,
+  };
+  if (allergies !== undefined) patientPayload.allergies = allergies;
+  if (medical_history_summary !== undefined) patientPayload.medical_history_summary = medical_history_summary;
+
   const { data, error } = await supabase
     .from("Patients")
-    .insert([payload])
+    .insert([patientPayload])
     .select()
     .single();
 
@@ -16,29 +40,83 @@ export const createPatient = async (payload) => {
 };
 
 export const getPatientById = async (patientId) => {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("Patients")
     .select(`
       patient_id,
-      dob,
-      gender,
-      address,
       allergies,
       medical_history_summary,
-      Users (
+      Users!inner (
+        username,
         full_name,
         email,
         phone_number,
         avatar_url,
         status,
-        role
+        role,
+        is_minor,
+        dob,
+        gender,
+        address
       )
     `)
     .eq("patient_id", patientId)
     .single();
 
   if (error || !data) {
-    throw new AppError("Patient not found", 404);
+    // 1. Check if user exists in Users table
+    const { data: user, error: userError } = await supabase
+      .from("Users")
+      .select("*")
+      .eq("user_id", patientId)
+      .single();
+
+    if (userError || !user) {
+      throw new AppError("Patient not found and User does not exist", 404);
+    }
+
+    // 2. Auto-create a basic patient profile for this user
+    const { error: insertError } = await supabase
+      .from("Patients")
+      .insert([
+        {
+          patient_id: patientId
+        }
+      ]);
+
+    if (insertError) {
+      throw new AppError("Failed to auto-create patient profile: " + insertError.message, 500);
+    }
+
+    // 3. Fetch again
+    const { data: newData, error: newError } = await supabase
+      .from("Patients")
+      .select(`
+        patient_id,
+        allergies,
+        medical_history_summary,
+        Users!inner (
+          username,
+          full_name,
+          email,
+          phone_number,
+          avatar_url,
+          status,
+          role,
+          is_minor,
+          dob,
+          gender,
+          address
+        )
+      `)
+      .eq("patient_id", patientId)
+      .single();
+
+    if (newError || !newData) {
+      throw new AppError("Failed to retrieve auto-created patient", 500);
+    }
+
+    data = newData;
   }
 
   return data;
@@ -56,15 +134,19 @@ export const getPatientList = async ({
     .select(
       `
       patient_id,
-      dob,
-      gender,
-      address,
-      Users (
+      allergies,
+      medical_history_summary,
+      Users!inner (
+        username,
         full_name,
         phone_number,
         avatar_url,
         status,
-        role
+        role,
+        is_minor,
+        dob,
+        gender,
+        address
       )
     `,
       { count: "exact" },
@@ -79,7 +161,9 @@ export const getPatientList = async ({
     );
   }
 
-  if (gender) query = query.eq("gender", gender);
+  if (gender) {
+    query = query.eq("Users.gender", gender);
+  }
 
   if (status) query = query.eq("Users.status", status);
 
@@ -115,7 +199,7 @@ export const updatePatient = async (patientId, payload) => {
   }
 
   // 2. Update Patients table
-  const patientFields = ["dob", "gender", "address", "allergies", "medical_history_summary"];
+  const patientFields = ["allergies", "medical_history_summary"];
   const patientPayload = {};
 
   patientFields.forEach((key) => {
@@ -134,7 +218,7 @@ export const updatePatient = async (patientId, payload) => {
   }
 
   // 3. Update Users table
-  const userFields = ["full_name", "phone_number", "avatar_url", "status"];
+  const userFields = ["username", "full_name", "phone_number", "avatar_url", "status", "is_minor", "dob", "gender", "address"];
   const userPayload = {};
 
   userFields.forEach((key) => {
@@ -158,14 +242,18 @@ export const updatePatient = async (patientId, payload) => {
     .select(
       `
     patient_id,
-    dob,
-    gender,
-    address,
-    Users (
+    allergies,
+    medical_history_summary,
+    Users!inner (
+      username,
       full_name,
       phone_number,
       avatar_url,
-      status
+      status,
+      is_minor,
+      dob,
+      gender,
+      address
     )
   `,
     )

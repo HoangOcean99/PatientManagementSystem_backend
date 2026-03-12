@@ -1,7 +1,6 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 import crypto from "crypto";
-import { sendFamilyInvitationEmail } from "./gmailService.js";
 
 // ── In-memory share code store (TTL 15 min) ──
 const shareCodes = new Map();
@@ -23,20 +22,21 @@ function cleanExpiredCodes() {
 
 // ── Add Dependent (tạo mới User + Patient + FamilyRelationship) ──
 export const addDependent = async (parentUserId, dependentData) => {
-    const { full_name, dob, gender, address, allergies, medical_history_summary, relationship } = dependentData;
+    const { username, is_minor, full_name, dob, gender, address, allergies, medical_history_summary, relationship } = dependentData;
 
     const randomSuffix = crypto.randomBytes(4).toString("hex");
     const fakeEmail = `dependent_${randomSuffix}@family.local`;
-    const fakeUsername = `dep_${randomSuffix}`;
+    const finalUsername = username || `dep_${randomSuffix}`;
+    const finalIsMinor = is_minor !== undefined ? is_minor : true;
 
     const { data: newUser, error: userError } = await supabase
         .from("Users")
         .insert([{
-            username: fakeUsername,
+            username: finalUsername,
             email: fakeEmail,
             full_name,
             role: "patient",
-            is_minor: true
+            is_minor: finalIsMinor
         }])
         .select()
         .single();
@@ -130,10 +130,12 @@ export const getDependentDetail = async (parentUserId, relationshipId) => {
             child_user_id,
             Users!FamilyRelationships_child_user_id_fkey (
                 user_id,
+                username,
                 full_name,
                 avatar_url,
                 email,
                 status,
+                is_minor,
                 Patients (
                     dob,
                     gender,
@@ -173,13 +175,18 @@ export const updateDependent = async (parentUserId, relationshipId, updateData) 
     }
 
     const childUserId = relation.child_user_id;
-    const { full_name, dob, gender, address, allergies, medical_history_summary, relationship } = updateData;
+    const { username, is_minor, full_name, dob, gender, address, allergies, medical_history_summary, relationship } = updateData;
 
-    // Update Users table if full_name provided
-    if (full_name) {
+    // Update Users table if provided
+    const userUpdatePayload = {};
+    if (full_name !== undefined) userUpdatePayload.full_name = full_name;
+    if (username !== undefined) userUpdatePayload.username = username;
+    if (is_minor !== undefined) userUpdatePayload.is_minor = is_minor;
+
+    if (Object.keys(userUpdatePayload).length > 0) {
         const { error: userErr } = await supabase
             .from("Users")
-            .update({ full_name })
+            .update(userUpdatePayload)
             .eq("user_id", childUserId);
 
         if (userErr) throw new AppError(`Error updating user: ${userErr.message}`, 500);
