@@ -18,9 +18,7 @@ export const getAllLabOrders = async (query = {}) => {
                 record_id,
                 Patients (
                     patient_id,
-                    dob,
-                    gender,
-                    Users (full_name, phone_number)
+                    Users (full_name, phone_number,dob,gender)
                 ),
                 Doctors (
                     Users (full_name)
@@ -124,10 +122,8 @@ export const getLabOrderById = async (labOrderId) => {
                 diagnosis,
                 Patients (
                     patient_id,
-                    dob,
-                    gender,
                     allergies,
-                    Users (full_name, phone_number)
+                    Users (full_name, phone_number,dob,gender)
                 ),
                 Doctors (
                     Users (full_name)

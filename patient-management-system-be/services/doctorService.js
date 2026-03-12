@@ -249,13 +249,13 @@ export const getDoctorAppointmentsByDoctorId = async (
             ),
             Patients (
                 patient_id,
-                dob,
-                gender,
-                address,
                 Users (
                     full_name,
                     phone_number,
-                    avatar_url
+                    avatar_url,
+                    dob,
+                    gender,
+                    address
                 )
             ),
             ClinicServices (
