@@ -17,6 +17,21 @@ export const createPatient = asyncHandler(async (req, res) => {
   });
 });
 
+export const getPatientById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  
+  if (!id) {
+    throw new AppError("Patient ID is required", 400);
+  }
+
+  const patient = await patientService.getPatientById(id);
+
+  res.status(200).json({
+    success: true,
+    data: patient,
+  });
+});
+
 export const getPatient = asyncHandler(async (req, res) => {
   const { keyword, gender, status, page, pageSize } = req.query;
 
@@ -45,5 +60,19 @@ export const updatePatient = asyncHandler(async (req, res) => {
     success: true,
     message: "Patient updated successfully",
     data: updated,
+  });
+});
+
+export const deletePatient = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError("Patient ID is required", 400);
+  }
+  
+  await patientService.deletePatient(id);
+  
+  res.status(200).json({
+    success: true,
+    message: "Patient deleted successfully",
   });
 });

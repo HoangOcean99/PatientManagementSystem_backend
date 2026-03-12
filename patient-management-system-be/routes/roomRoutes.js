@@ -1,10 +1,11 @@
 import express from 'express';
-import {
-    getListActiveRooms
-} from '../controllers/roomController.js';
-
 const router = express.Router();
 
-router.get('/getListActive', getListActiveRooms);
+import express from "express";
+import { getListActiveRooms, getListInactiveRooms, getListRooms } from "../controllers/roomController.js";
 
-export default router;
+roomRouter.get('/getListActive', getListActiveRooms);
+roomRouter.get('/getListInactive', getListInactiveRooms);
+roomRouter.get('/getList', getListRooms);
+
+export default roomRouter;

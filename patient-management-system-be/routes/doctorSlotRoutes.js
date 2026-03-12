@@ -31,3 +31,16 @@ router.delete('/delete/:slotId', requireAuth, deleteSlotValidator, deleteSlot);
 router.post('/delete-bulk', requireAuth, deleteBulkSlotsValidator, deleteBulkSlots);
 
 export default router;
+
+import { getListDoctorSlots } from "../controllers/doctorSlotController.js";
+import { getAvailableDoctorSlotsByDoctorIdAndDate } from "../controllers/doctorSlotController.js";
+import { createDoctorSlot } from "../controllers/doctorSlotController.js";
+import { getDoctorSlotById } from "../controllers/doctorSlotController.js";
+
+const doctorSlotRouter = express.Router();
+doctorSlotRouter.get('/getList', getListDoctorSlots);
+doctorSlotRouter.get('/getById/:slot_id', getDoctorSlotById);
+doctorSlotRouter.post('/getAvailableDoctorSlotsByDoctorIdAndDate', getAvailableDoctorSlotsByDoctorIdAndDate);
+doctorSlotRouter.post('/create', createDoctorSlot);
+export default doctorSlotRouter;
+

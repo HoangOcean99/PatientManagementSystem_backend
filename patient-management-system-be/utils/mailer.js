@@ -16,3 +16,23 @@ export const sendMail = async (to, subject, html) => {
         html,
     });
 };
+
+export const sendMailWithIcal = async (to, subject, html, icalContent = null) => {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: to,
+        subject: subject,
+        html: html,
+    };
+
+    // Nếu có truyền file lịch (icalContent) thì đính kèm vào mail
+    if (icalContent) {
+        mailOptions.icalEvent = {
+            filename: 'invite.ics',
+            method: 'request',
+            content: icalContent
+        };
+    }
+
+    await transporter.sendMail(mailOptions);
+};

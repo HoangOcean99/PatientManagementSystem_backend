@@ -4,30 +4,30 @@ import { supabase } from '../supabaseClient.js';
 export const getSystemConfig = async () => {
     const { data, error } = await supabase
         .from('SystemConfig')
-        .select('config_value')
-        .eq('config_key', 'operating_hours')
-        .single();
+        .select('*')
 
     if (error) {
         console.error('Lỗi lấy lịch trình:', error);
         return null;
     }
 
-    return typeof data.config_value === 'string'
-        ? JSON.parse(data.config_value)
-        : data.config_value;
-};
-
-export const updateSystemConfig = async (key, newValue) => {
-    const { data, error } = await supabase
-        .from('SystemConfig')
-        .update('config_value', newValue)
-        .eq('config_key', key)
-    if (error) throw error;
     return data;
 };
 
+export const updateSystemConfigs = async (configs) => {
+    const { data, error } = await supabase
+        .from('SystemConfig')
+        .upsert(
+            configs.map(c => ({
+                config_key: c.key,
+                config_value: c.value
+            }))
+        );
 
+    if (error) throw error;
+
+    return data;
+};
 export const getAllHolidays = async () => {
     const { data, error } = await supabase
         .from('PublicHolidays')
