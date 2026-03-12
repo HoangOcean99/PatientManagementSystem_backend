@@ -44,8 +44,6 @@ app.use('/department', departmentRoutes);
 app.use('/clinic-service', serviceRoutes);
 app.use('/system-config', systemConfigRoutes);
 
-
-
 app.use(errorHandler);
 
 export default app;

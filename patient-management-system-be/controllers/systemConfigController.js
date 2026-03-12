@@ -9,14 +9,15 @@ export const getSystemConfig = asyncHandler(async (req, res, next) => {
 
 
 export const updateSystemConfig = asyncHandler(async (req, res, next) => {
-    const { key, newValue } = req.body;
-    const data = await scheduleServices.updateSystemConfig(key, newValue);
+    const configs = req.body;
+
+    const data = await scheduleServices.updateSystemConfigs(configs);
+
     res.status(200).json({
         message: 'Cập nhật cấu hình thành công',
         data
     });
 });
-
 
 export const getAllHolidays = asyncHandler(async (req, res, next) => {
     const data = await scheduleServices.getAllHolidays();
