@@ -25,7 +25,10 @@ export const getAllLabOrders = async (query = {}) => {
                 Doctors (
                     Users (full_name)
                 ),
-                Appointments (appointment_id, appointment_date)
+                Appointments (
+                    appointment_id,
+                    DoctorSlots (slot_date)
+                )
             )
         `, { count: 'exact' })
         .order('created_at', { ascending: false })
@@ -107,82 +110,7 @@ export const createLabOrders = async (recordId, doctorId, labOrders) => {
 };
 
 // ============================================================
-// 2. Danh sách cuộc hẹn có lab orders hôm nay (BS xét nghiệm)
-// ============================================================
-export const getTodayLabOrders = async (dateStr) => {
-    const today = dateStr || new Date().toISOString().split('T')[0];
-
-    const { data: appointments, error } = await supabase
-        .from('Appointments')
-        .select(`
-            appointment_id,
-            appointment_date,
-            start_time,
-            end_time,
-            status,
-            Patients (
-                patient_id,
-                dob,
-                gender,
-                Users (full_name, phone_number)
-            ),
-            Doctors (
-                Users (full_name)
-            ),
-            MedicalRecords (
-                record_id,
-                LabOrders (lab_order_id, test_name, status, created_at)
-            )
-        `)
-        .eq('appointment_date', today);
-
-    if (error) throw new AppError(error.message, 500);
-
-    // Filter: chỉ giữ appointments có ít nhất 1 lab order
-    const withLabOrders = appointments
-        .filter(appt => {
-            const record = appt.MedicalRecords;
-            return record && record.LabOrders && record.LabOrders.length > 0;
-        })
-        .map(appt => {
-            const record = appt.MedicalRecords;
-            const labs = record.LabOrders || [];
-
-            return {
-                appointment_id: appt.appointment_id,
-                appointment_date: appt.appointment_date,
-                start_time: appt.start_time,
-                end_time: appt.end_time,
-                appointment_status: appt.status,
-                patient: {
-                    patient_id: appt.Patients?.patient_id,
-                    full_name: appt.Patients?.Users?.full_name,
-                    phone_number: appt.Patients?.Users?.phone_number,
-                    dob: appt.Patients?.dob,
-                    gender: appt.Patients?.gender,
-                },
-                referring_doctor: appt.Doctors?.Users?.full_name || null,
-                record_id: record.record_id,
-                lab_summary: {
-                    total: labs.length,
-                    ordered: labs.filter(l => l.status === 'ordered').length,
-                    processing: labs.filter(l => l.status === 'processing').length,
-                    completed: labs.filter(l => l.status === 'completed').length,
-                },
-                lab_orders: labs.map(l => ({
-                    lab_order_id: l.lab_order_id,
-                    test_name: l.test_name,
-                    status: l.status,
-                    created_at: l.created_at,
-                })),
-            };
-        });
-
-    return withLabOrders;
-};
-
-// ============================================================
-// 3. Chi tiết 1 lab order (BS xét nghiệm xem + cập nhật)
+// 2. Chi tiết 1 lab order (BS xét nghiệm xem + cập nhật)
 // ============================================================
 export const getLabOrderById = async (labOrderId) => {
     const { data, error } = await supabase
@@ -204,7 +132,11 @@ export const getLabOrderById = async (labOrderId) => {
                 Doctors (
                     Users (full_name)
                 ),
-                Appointments (appointment_id, appointment_date, start_time, status)
+                Appointments (
+                    appointment_id,
+                    status,
+                    DoctorSlots (slot_date, start_time)
+                )
             )
         `)
         .eq('lab_order_id', labOrderId)
@@ -221,7 +153,7 @@ export const getLabOrderById = async (labOrderId) => {
 };
 
 // ============================================================
-// 4. Cập nhật lab order (BS xét nghiệm cập nhật kết quả)
+// 3. Cập nhật lab order (BS xét nghiệm cập nhật kết quả)
 //    - Cho phép update: status, result_summary, result_file_url
 // ============================================================
 export const updateLabOrder = async (labOrderId, updateData) => {

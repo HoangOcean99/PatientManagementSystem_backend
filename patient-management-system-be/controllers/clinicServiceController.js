@@ -3,7 +3,7 @@ import * as ClinicService from '../services/clinicServicesService.js';
 
 export const getAllServices = async (req, res) => {
     try {
-        
+
         const data = await ClinicService.getAll();
         return res.status(200).json({
             success: true,
@@ -26,7 +26,7 @@ export const getAllServicesByDepartment = async (req, res) => {
             department,
             is_active: is_active !== undefined ? is_active === 'true' : undefined
         };
-        
+
         const data = await ClinicService.getAll(filters);
         return res.status(200).json({
             success: true,
@@ -45,7 +45,7 @@ export const getServiceById = async (req, res) => {
     try {
         const { id } = req.params;
         const data = await ClinicService.getById(id);
-        
+
         if (!data) {
             return res.status(404).json({
                 success: false,
@@ -69,8 +69,7 @@ export const getServiceById = async (req, res) => {
 export const createService = async (req, res) => {
     try {
         const payload = req.body;
-        // Bạn có thể thêm validation payload ở đây
-        
+
         const data = await ClinicService.create(payload);
         return res.status(201).json({
             success: true,
@@ -90,7 +89,7 @@ export const updateService = async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
-        
+
         const data = await ClinicService.update(id, updates);
         return res.status(200).json({
             success: true,
@@ -110,7 +109,7 @@ export const deleteService = async (req, res) => {
     try {
         const { id } = req.params;
         await ClinicService.remove(id);
-        
+
         return res.status(200).json({
             success: true,
             message: 'Đã xóa dịch vụ thành công'

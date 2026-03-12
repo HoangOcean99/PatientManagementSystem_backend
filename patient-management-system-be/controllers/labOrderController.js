@@ -47,19 +47,6 @@ export const createLabOrders = asyncHandler(async (req, res, next) => {
     });
 });
 
-// GET /lab-orders/today — BS xét nghiệm xem danh sách hôm nay
-export const getTodayLabOrders = asyncHandler(async (req, res) => {
-    const { date } = req.query; // optional: override ngày (cho testing)
-
-    const data = await labOrderService.getTodayLabOrders(date);
-
-    res.status(200).json({
-        status: 'success',
-        results: data.length,
-        data
-    });
-});
-
 // GET /lab-orders/:labOrderId — Chi tiết 1 xét nghiệm
 export const getLabOrderById = asyncHandler(async (req, res) => {
     const { labOrderId } = req.params;
