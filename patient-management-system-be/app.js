@@ -13,12 +13,13 @@ import userRouter from "./routes/userRoutes.js";
 import cors from 'cors';
 import medicalRecordRouter from './routes/medicalRecordRoutes.js';
 import labOrderRouter from './routes/labOrderRoutes.js';
-
-
+import roomRoutes from './routes/roomRoutes.js';
 import appointmentRouter from './routes/appointmentRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import serviceRoutes from './routes/ClinicServicesRoutes.js';
 import systemConfigRoutes from './routes/systemConfigRoutes.js';
+import doctorSlotRoutes from './routes/doctorSlotRoutes.js';
+
 const app = express();
 
 app.use(cors({
@@ -43,7 +44,8 @@ app.use('/lab-orders', labOrderRouter);
 app.use('/department', departmentRoutes);
 app.use('/clinic-service', serviceRoutes);
 app.use('/system-config', systemConfigRoutes);
-
+app.use('/doctor-slots', doctorSlotRoutes);
+app.use('/room', roomRoutes);
 
 
 app.use(errorHandler);
