@@ -3,7 +3,7 @@ import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
-import baseRouter from './routes/BaseRoutes.js';
+import baseRouter from './routes/baseRoutes.js';
 import authRouter from './routes/authRoutes.js';
 import gmailRouter from './routes/gmailRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -19,6 +19,8 @@ import appointmentRouter from './routes/appointmentRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import serviceRoutes from './routes/ClinicServicesRoutes.js';
 import systemConfigRoutes from './routes/systemConfigRoutes.js';
+import doctorAssignmentRouter from './routes/doctorAssignmentRoutes.js';
+import underMyCareRouter from './routes/underMyCareRoutes.js';
 const app = express();
 
 app.use(cors({
@@ -43,6 +45,9 @@ app.use('/lab-orders', labOrderRouter);
 app.use('/department', departmentRoutes);
 app.use('/clinic-service', serviceRoutes);
 app.use('/system-config', systemConfigRoutes);
+app.use('/doctor-assignments', doctorAssignmentRouter);
+app.use('/under-my-care', underMyCareRouter);
+
 
 app.use(errorHandler);
 

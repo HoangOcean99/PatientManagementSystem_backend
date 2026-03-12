@@ -15,6 +15,35 @@ export const createPatient = async (payload) => {
   return data;
 };
 
+export const getPatientById = async (patientId) => {
+  const { data, error } = await supabase
+    .from("Patients")
+    .select(`
+      patient_id,
+      dob,
+      gender,
+      address,
+      allergies,
+      medical_history_summary,
+      Users (
+        full_name,
+        email,
+        phone_number,
+        avatar_url,
+        status,
+        role
+      )
+    `)
+    .eq("patient_id", patientId)
+    .single();
+
+  if (error || !data) {
+    throw new AppError("Patient not found", 404);
+  }
+
+  return data;
+};
+
 export const getPatientList = async ({
   keyword,
   gender,
@@ -86,7 +115,7 @@ export const updatePatient = async (patientId, payload) => {
   }
 
   // 2. Update Patients table
-  const patientFields = ["dob", "gender", "address"];
+  const patientFields = ["dob", "gender", "address", "allergies", "medical_history_summary"];
   const patientPayload = {};
 
   patientFields.forEach((key) => {
@@ -148,4 +177,59 @@ export const updatePatient = async (patientId, payload) => {
   }
 
   return fullData;
+};
+
+export const deletePatient = async (patientId) => {
+  // Check if patient exists
+  const { data: existing, error: findError } = await supabase
+    .from("Patients")
+    .select("patient_id")
+    .eq("patient_id", patientId)
+    .single();
+
+  if (findError || !existing) {
+    throw new AppError("Patient not found", 404);
+  }
+
+  // 1. Delete FamilyRelationships where patient is the child (dependent)
+  const { error: deleteChildRelError } = await supabase
+    .from("FamilyRelationships")
+    .delete()
+    .eq("child_user_id", patientId);
+
+  if (deleteChildRelError) {
+    throw new AppError(deleteChildRelError.message, 500);
+  }
+
+  // 2. Delete FamilyRelationships where patient is the parent
+  const { error: deleteParentRelError } = await supabase
+    .from("FamilyRelationships")
+    .delete()
+    .eq("parent_user_id", patientId);
+
+  if (deleteParentRelError) {
+    throw new AppError(deleteParentRelError.message, 500);
+  }
+
+  // 3. Delete from Patients table
+  const { error: deletePatientError } = await supabase
+    .from("Patients")
+    .delete()
+    .eq("patient_id", patientId);
+
+  if (deletePatientError) {
+    throw new AppError(deletePatientError.message, 500);
+  }
+
+  // 4. Delete from Users table
+  const { error: deleteUserError } = await supabase
+    .from("Users")
+    .delete()
+    .eq("user_id", patientId);
+
+  if (deleteUserError) {
+    throw new AppError(deleteUserError.message, 500);
+  }
+
+  return true;
 };
