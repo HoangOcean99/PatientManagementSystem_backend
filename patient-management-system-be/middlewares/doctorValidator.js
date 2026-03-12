@@ -27,14 +27,33 @@ export const updateDoctorValidator = [
         .trim()
         .notEmpty().withMessage('Specialization cannot be empty'),
     
-    body('room_number')
+    body('room_id')
         .optional()
-        .trim()
-        .notEmpty().withMessage('Room number cannot be empty'),
+        .isUUID().withMessage('Room ID must be a valid UUID'),
     
     body('status')
         .optional()
         .isIn(['active', 'inactive']).withMessage('Status must be either active or inactive'),
     
+    validate
+];
+
+export const createDoctorProfileValidator = [
+    body('specialization')
+        .trim()
+        .notEmpty().withMessage('Specialization is required'),
+
+    body('department_id')
+        .notEmpty().withMessage('Department ID is required')
+        .isUUID().withMessage('Department ID must be a valid UUID'),
+
+    body('room_id')
+        .notEmpty().withMessage('Room ID is required')
+        .isUUID().withMessage('Room ID must be a valid UUID'),
+
+    body('bio')
+        .optional()
+        .trim(),
+
     validate
 ];

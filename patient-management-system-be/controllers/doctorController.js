@@ -64,6 +64,22 @@ export const updateDoctor = asyncHandler(async (req, res, next) => {
     });
 });
 
+export const createDoctorProfile = asyncHandler(async (req, res, next) => {
+    const { doctorId } = req.params;
+    const profileData = req.body;
+
+    if (!doctorId) {
+        return next(new AppError('Doctor ID is required', 400));
+    }
+
+    const doctor = await doctorService.createDoctorProfile(doctorId, profileData);
+
+    res.status(201).json({
+        status: 'success',
+        data: doctor
+    });
+});
+
 export const getAppointmentsByDoctorId = asyncHandler(async (req, res, next) => {
     const { doctorId } = req.params;
     const { date, status } = req.query; // Filter query params

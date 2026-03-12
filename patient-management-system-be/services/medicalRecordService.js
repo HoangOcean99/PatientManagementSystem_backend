@@ -146,8 +146,8 @@ export const startExamination = async (appointmentId, doctorId, patientId) => {
         throw new AppError('Patient ID does not match the appointment', 400);
     }
 
-    if (appointment.status !== 'ready') {
-        throw new AppError(`Cannot start examination. Current status is ${appointment.status}, expected 'ready'`, 400);
+    if (appointment.status !== 'checked_in') {
+        throw new AppError(`Cannot start examination. Current status is ${appointment.status}, expected 'checked_in'`, 400);
     }
 
     const { error: updateApptError } = await supabase
@@ -188,7 +188,10 @@ export const getMedicalRecordById = async (recordId) => {
                 specialization,
                 Users (full_name)
             ),
-            Appointments (appointment_date, start_time, status),
+            Appointments (
+                status,
+                DoctorSlots (slot_date, start_time)
+            ),
             Prescriptions (*),
             LabOrders (*)
         `)
@@ -222,7 +225,10 @@ export const getMedicalRecordsByPatient = async (patientId) => {
             Doctors (
                 Users (full_name)
             ),
-            Appointments (appointment_date, status),
+            Appointments (
+                status,
+                DoctorSlots (slot_date, start_time)
+            ),
             Prescriptions (*),
             LabOrders (*)
         `)
