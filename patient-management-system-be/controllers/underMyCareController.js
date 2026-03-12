@@ -109,3 +109,37 @@ export const linkDependent = asyncHandler(async (req, res) => {
         data,
     });
 });
+
+// POST /under-my-care/invite — Mời qua email
+export const inviteByEmail = asyncHandler(async (req, res) => {
+    const parentUserId = req.user.id;
+    const { email, relationship } = req.body;
+
+    if (!email) throw new AppError("email is required", 400);
+
+    const data = await underMyCareService.inviteByEmail(parentUserId, email, relationship);
+
+    res.status(200).json({
+        status: "success",
+        message: data.message,
+        data: {
+            expires_at: data.expires_at
+        }
+    });
+});
+
+// POST /under-my-care/accept-invite — Chấp nhận mã mời email
+export const acceptEmailInvitation = asyncHandler(async (req, res) => {
+    const childUserId = req.user.id;
+    const { invitation_code } = req.body;
+
+    if (!invitation_code) throw new AppError("invitation_code is required", 400);
+
+    const data = await underMyCareService.acceptEmailInvitation(childUserId, invitation_code);
+
+    res.status(200).json({
+        status: "success",
+        message: "Email invitation accepted successfully",
+        data,
+    });
+});

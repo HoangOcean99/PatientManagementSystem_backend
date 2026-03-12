@@ -3,7 +3,7 @@ import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
-import baseRouter from './routes/BaseRoutes.js';
+import baseRouter from './routes/baseRoutes.js';
 import authRouter from './routes/authRoutes.js';
 import gmailRouter from './routes/gmailRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';

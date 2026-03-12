@@ -1,15 +1,23 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 import crypto from "crypto";
+import { sendFamilyInvitationEmail } from "./gmailService.js";
 
 // ── In-memory share code store (TTL 15 min) ──
 const shareCodes = new Map();
 const SHARE_CODE_TTL = 15 * 60 * 1000;
 
+// ── In-memory email invite store (TTL 24 hours) ──
+const emailInvites = new Map();
+const EMAIL_INVITE_TTL = 24 * 60 * 60 * 1000;
+
 function cleanExpiredCodes() {
     const now = Date.now();
     for (const [code, entry] of shareCodes) {
         if (now > entry.expiresAt) shareCodes.delete(code);
+    }
+    for (const [code, entry] of emailInvites) {
+        if (now > entry.expiresAt) emailInvites.delete(code);
     }
 }
 
@@ -316,6 +324,123 @@ export const linkByShareCode = async (parentUserId, shareCode, relationship) => 
 
     // Invalidate the share code after use
     shareCodes.delete(shareCode);
+
+    return relation;
+};
+
+// ── Invite dependent by email ──
+export const inviteByEmail = async (parentUserId, targetEmail, relationship) => {
+    // 1. Find child user by email
+    const { data: childUser, error: childError } = await supabase
+        .from("Users")
+        .select("user_id, full_name")
+        .eq("email", targetEmail)
+        .single();
+
+    if (childError || !childUser) {
+        throw new AppError("No user found with this email address", 404);
+    }
+
+    // 2. Prevent self-invitation
+    if (childUser.user_id === parentUserId) {
+        throw new AppError("You cannot invite yourself", 400);
+    }
+
+    // 3. Check if relationship already exists
+    const { data: existing } = await supabase
+        .from("FamilyRelationships")
+        .select("relationship_id")
+        .eq("parent_user_id", parentUserId)
+        .eq("child_user_id", childUser.user_id)
+        .single();
+
+    if (existing) {
+        throw new AppError("You already have a relationship with this user", 409);
+    }
+
+    // 4. Get parent's name for the email
+    const { data: parentUser } = await supabase
+        .from("Users")
+        .select("full_name")
+        .eq("user_id", parentUserId)
+        .single();
+
+    const inviterName = parentUser?.full_name || "Unknown User";
+
+    // 5. Generate and store code
+    cleanExpiredCodes();
+    const code = crypto.randomBytes(3).toString("hex").toUpperCase(); // e.g. "A3F1B2"
+    const expiresAt = Date.now() + EMAIL_INVITE_TTL;
+
+    emailInvites.set(code, {
+        parentUserId,
+        childUserId: childUser.user_id,
+        relationship: relationship || "guardian",
+        expiresAt,
+    });
+
+    // 6. Send email
+    await sendFamilyInvitationEmail(targetEmail, inviterName, code);
+
+    return {
+        message: "Invitation sent successfully",
+        expires_at: new Date(expiresAt).toISOString(),
+    };
+};
+
+// ── Accept email invitation ──
+export const acceptEmailInvitation = async (childUserId, invitationCode) => {
+    cleanExpiredCodes();
+
+    const entry = emailInvites.get(invitationCode);
+    if (!entry) {
+        throw new AppError("Invalid or expired invitation code", 400);
+    }
+
+    if (entry.childUserId !== childUserId) {
+        throw new AppError("This invitation code is not for your account", 403);
+    }
+
+    const { parentUserId, relationship } = entry;
+
+    // Check if relationship already exists
+    const { data: existing } = await supabase
+        .from("FamilyRelationships")
+        .select("relationship_id")
+        .eq("parent_user_id", parentUserId)
+        .eq("child_user_id", childUserId)
+        .single();
+
+    if (existing) {
+        emailInvites.delete(invitationCode);
+        throw new AppError("You are already connected to this user", 409);
+    }
+
+    // Create new relationship
+    const { data: relation, error } = await supabase
+        .from("FamilyRelationships")
+        .insert([{
+            parent_user_id: parentUserId,
+            child_user_id: childUserId,
+            relationship: relationship || "guardian",
+            can_manage: true
+        }])
+        .select(`
+            relationship_id,
+            relationship,
+            can_manage,
+            parent_user_id,
+            Users!FamilyRelationships_parent_user_id_fkey (
+                full_name,
+                avatar_url
+            )
+        `)
+        .single();
+
+    if (error) throw new AppError(`Error accepting invitation: ${error.message}`, 500);
+
+    // Invalidate the code
+    emailInvites.delete(invitationCode);
 
     return relation;
 };

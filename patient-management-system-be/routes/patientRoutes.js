@@ -4,6 +4,7 @@ import {
   getPatient,
   getPatientById,
   updatePatient,
+  deletePatient,
 } from "../controllers/patientController.js";
 // import { auth, checkRole } from "../middlewares/auth.js";
 
@@ -23,4 +24,8 @@ patientRouter.get("/:id", getPatientById);
 // Update Patient
 // patientRouter.put("/:id", auth, checkRole(["admin"]), updatePatient);
 patientRouter.put("/:id", updatePatient);
+
+// Delete Patient
+patientRouter.delete("/:id", deletePatient);
+
 export default patientRouter;

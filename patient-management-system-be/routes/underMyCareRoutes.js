@@ -8,6 +8,8 @@ import {
     removeDependent,
     generateShareCode,
     linkDependent,
+    inviteByEmail,
+    acceptEmailInvitation
 } from "../controllers/underMyCareController.js";
 
 const router = express.Router();
@@ -22,6 +24,10 @@ router.post("/", addDependent);
 // Share code routes (must be BEFORE /:relationshipId to avoid conflict)
 router.post("/share-code", generateShareCode);
 router.post("/link", linkDependent);
+
+// Email invitation routes (must be BEFORE /:relationshipId)
+router.post("/invite", inviteByEmail);
+router.post("/accept-invite", acceptEmailInvitation);
 
 // Parameterized routes
 router.get("/:relationshipId", getDependentDetail);
