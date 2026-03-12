@@ -282,5 +282,20 @@ export const getDoctorAppointmentsByDoctorId = async (
     return data.filter((appt) => appt.DoctorSlots?.slot_date === date);
   }
 
-  return data;
-}
+    return data;
+};
+
+export const getDoctorByDepartmentId = async (departmentId) => {
+    const { data, error } = await supabase
+        .from('Doctors')
+        .select(`
+        doctor_id,
+        Departments!inner ( department_id, name ),
+        Users!inner ( user_id, full_name, email, phone_number, avatar_url, status)
+        `)
+        .eq('department_id', departmentId);
+
+    if (error) throw new AppError(error.message, 500);
+
+    return data;
+};
