@@ -18,7 +18,7 @@ export const getListAppointmentsByStatus = asyncHandler(async (req, res) => {
 export const createAppointmentForPatient = async (req, res, next) => {
   try {
     // Bệnh nhân chỉ gửi những thông tin này lên
-    const { patient_id, doctor_id, service_id, slot_id, role } = req.body;
+    const { patient_id, doctor_id, service_id, slot_id, role } = req.body ;
 
     // Không cần gọi createDoctorSlot nữa!
     const newAppointment = await appointmentService.createAppointment(

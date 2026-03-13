@@ -18,7 +18,7 @@ import roomRouter from './routes/roomRoutes.js';
 import doctorSlotRouter from './routes/doctorSlotRoutes.js'; 
 import departmentRouter from './routes/departmentRoutes.js';
 import clinicServicesRouter from './routes/clinicRoutes.js';
-
+import userRouter from './routes/userRoutes.js';
 const app = express();
 
 app.use(cors({
@@ -41,6 +41,7 @@ app.use('/room', roomRouter);
 app.use('/doctor-slots', doctorSlotRouter);
 app.use('/departments', departmentRouter);
 app.use('/clinic-services', clinicServicesRouter);
+app.use('/users', userRouter);
 app.use(express.json());
 
 

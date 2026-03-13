@@ -19,4 +19,20 @@ export const getListServicesByDepartment = async (departmentId) => {
    return data;
 }
 
+export const createDepartment = async (department) => {
+   const { data, error } = await supabase.from('Departments').insert(department).select().single();
+   if (error) throw new AppError(error.message, 500);
+   return data;
+}
 
+export const updateDepartment = async (departmentId, department) => {
+   const { data, error } = await supabase.from('Departments').update(department).eq('department_id', departmentId).select().single();
+   if (error) throw new AppError(error.message, 500);
+   return data;
+}
+
+export const deleteDepartment = async (departmentId) => {
+   const { data, error } = await supabase.from('Departments').delete().eq('department_id', departmentId).select().single();
+   if (error) throw new AppError(error.message, 500);
+   return data;
+}

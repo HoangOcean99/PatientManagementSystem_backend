@@ -11,11 +11,12 @@ export const getListDoctorSlots = async (req, res) => {
 export const getDoctorSlotById = async (req, res) => {
     const doctorSlot = await doctorSlotService.getDoctorSlotById(req.params.slot_id);
     res.status(200).json(doctorSlot);
-}  
+}
 
-export const getAvailableDoctorSlotsByDoctorIdAndDate = async (req, res, next) => {  
+export const getAvailableDoctorSlotsByDoctorIdAndDate = async (req, res, next) => {
     try {
         const { doctor_id, start_date, end_date } = req.body;
+        console.log(doctor_id, start_date, end_date);
 
         // Kiểm tra xem dữ liệu có đầy đủ không
         if (!doctor_id || !start_date || !end_date) {
@@ -49,7 +50,7 @@ export const createDoctorSlot = async (req, res, next) => {
         res.status(200).json({
             success: true,
             message: "Tạo khung giờ thành công",
-            data: newDoctorSlot 
+            data: newDoctorSlot
         });
     } catch (error) {
         next(error); // Chuyển lỗi sang middleware xử lý lỗi

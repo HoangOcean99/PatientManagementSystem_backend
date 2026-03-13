@@ -48,5 +48,27 @@ export const getListRooms = async () => {
   };
 }
 
+export const createRoom = async (room) => {
+  const { data, error } = await supabase.from('Rooms').insert(room).select().single();
+  if (error) throw new AppError(error.message, 500);
+  return data;
+}
 
+export const updateRoom = async (roomId, room) => {
+  const { data, error } = await supabase.from('Rooms').update(room).eq('room_id', roomId).select().single();
+  if (error) throw new AppError(error.message, 500);
+  return data;
+}
+
+export const getRoomById = async (roomId) => {
+  const { data, error } = await supabase.from('Rooms').select('*').eq('room_id', roomId).single();
+  if (error) throw new AppError(error.message, 500);
+  return data;
+}
+
+export const deleteRoom = async (roomId) => {
+  const { data, error } = await supabase.from('Rooms').delete().eq('room_id', roomId).select().single();
+  if (error) throw new AppError(error.message, 500);
+  return data;
+}
 

@@ -2,10 +2,14 @@ import express from "express";
 import { getListDepartments } from "../controllers/departmentsController.js";
 import { getDepartmentById } from "../controllers/departmentsController.js";
 import { getListServicesByDepartment } from "../controllers/departmentsController.js";
-
+import { createDepartment } from "../controllers/departmentsController.js";
+import { updateDepartment } from "../controllers/departmentsController.js";
+import { deleteDepartment } from "../controllers/departmentsController.js";
 const departmentRouter = express.Router();
 departmentRouter.get('/getList', getListDepartments);
 departmentRouter.get('/getById/:departmentId', getDepartmentById);
 departmentRouter.get('/getListServicesByDepartment/:departmentId', getListServicesByDepartment);
-
+departmentRouter.post('/create', createDepartment);
+departmentRouter.put('/update/:departmentId', updateDepartment);
+departmentRouter.delete('/delete/:departmentId', deleteDepartment);
 export default departmentRouter;

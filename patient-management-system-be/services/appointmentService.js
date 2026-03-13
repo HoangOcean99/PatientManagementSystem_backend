@@ -38,9 +38,9 @@ export const getListAppointments = async (date) => {
     a.DoctorSlots.start_time.localeCompare(b.DoctorSlots.start_time)
   );
 };
-    export const getListAppointmentsByStatus = async (status) => {
+export const getListAppointmentsByStatus = async (status) => {
   const { data: appointment, error } = await supabase
-    .from('Appointments ') 
+    .from('Appointments ')
     .select(`
      appointment_id,
       status,
@@ -49,10 +49,10 @@ export const getListAppointments = async (date) => {
       Doctors!inner ( doctor_id, Users!inner ( full_name, email ) ),
       ClinicServices!inner ( service_id, name, Departments!inner ( department_id, name ) )
     `)
-    .eq('status', status )
-    
+    .eq('status', status)
 
-  if (error || !appointment) { 
+
+  if (error || !appointment) {
     throw new AppError(error?.message || "Lịch khám không tồn tại", error?.statusCode || 404);
   }
   return appointment;
@@ -102,7 +102,7 @@ export const getUnassignedAppointment = async (date) => {
   );
 }
 
-export const createAppointment = async (patient_id, doctor_id, service_id, slot_id, role) => {
+export const createAppointment = async (patient_id, doctor_id, service_id, slot_id, current_symptom) => {
   // 1. Kiểm tra slot xem còn trống không (Sử dụng slot_id truyền vào)
   const { data: slot, error: slotError } = await supabase
     .from('DoctorSlots')
@@ -144,6 +144,7 @@ export const createAppointment = async (patient_id, doctor_id, service_id, slot_
       service_id,
       slot_id: slot_id, // Lưu ý: slot_id ở đây là biến tham số
       status: "pending",
+      currentSymptom: current_symptom,
       total_price: total_price,
       deposit_required: deposit_required
     })
@@ -182,7 +183,7 @@ export const rescheduleAppointment = async (appointment_id, new_slot_id, updates
       .select('status, slot_id')
       .eq('appointment_id', appointment_id)
       .single();
-    
+
     if (fetchError || !appointment) throw new AppError('Lịch khám không tồn tại', 404);
 
     // Kiểm tra slot mới
