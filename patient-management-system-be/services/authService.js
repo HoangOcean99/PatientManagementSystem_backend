@@ -53,31 +53,55 @@ export const verifyAndCreateUser = async (
 
     if (error) throw error;
 
-    const { data: dataRpc, error: errorRpc } = await supabase.rpc('create_minor_user', {
-        p_user_id: dataSignUp.user.id,
-        p_username: username,
-        p_parent_id: idParent,
-        p_relationship: relationship
-    });
+    const childUserId = dataSignUp.user.id;
 
-    if (errorRpc) {
-        await supabase.auth.admin.deleteUser(dataSignUp.user.id);
-        throw new AppError(errorRpc.message, 500);
-    }
-    const { data: role, error: errorRole } = await supabase
+    // 1. Insert into Users table
+    const { error: userError } = await supabase
         .from('Users')
-        .select('role')
-        .eq('user_id', dataSignUp.user.id)
-        .single();
+        .insert({
+            user_id: childUserId,
+            username,
+            role: 'patient',
+            is_minor: true
+        });
 
-    if (errorRole) {
-        throw errorRole;
+    if (userError) {
+        await supabase.auth.admin.deleteUser(childUserId);
+        throw new AppError(`Error creating user: ${userError.message}`, 500);
+    }
+
+    // 2. Insert into Patients table
+    const { error: patientError } = await supabase
+        .from('Patients')
+        .insert({ patient_id: childUserId });
+
+    if (patientError) {
+        await supabase.from('Users').delete().eq('user_id', childUserId);
+        await supabase.auth.admin.deleteUser(childUserId);
+        throw new AppError(`Error creating patient: ${patientError.message}`, 500);
+    }
+
+    // 3. Insert ONE FamilyRelationship record (parent → child only)
+    const { error: relError } = await supabase
+        .from('FamilyRelationships')
+        .insert({
+            parent_user_id: idParent,
+            child_user_id: childUserId,
+            relationship,
+            can_manage: true
+        });
+
+    if (relError) {
+        await supabase.from('Patients').delete().eq('patient_id', childUserId);
+        await supabase.from('Users').delete().eq('user_id', childUserId);
+        await supabase.auth.admin.deleteUser(childUserId);
+        throw new AppError(`Error creating relationship: ${relError.message}`, 500);
     }
 
     return {
         success: true,
-        id: dataSignUp.user.id,
-        role: role.role
+        id: childUserId,
+        role: 'patient'
     };
 };
 

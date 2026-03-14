@@ -32,3 +32,15 @@ export const createUser = async (userData) => {
   if (error) throw new AppError(error.message, 400);
   return data;
 };
+
+export const deleteUser = async (userId) => {
+  const { data, error } = await supabase
+    .from("Users")
+    .delete()
+    .eq("user_id", userId)
+    .select()
+    .single();
+    
+  if (error) throw new AppError(error.message, 400);
+  return data;
+};

@@ -24,6 +24,7 @@ import listEndpoints from 'express-list-endpoints';
 import roomRouter from './routes/roomRoutes.js';
 import doctorSlotRouter from './routes/doctorSlotRoutes.js'; 
 import clinicServicesRouter from './routes/clinicRoutes.js';
+import invoiceRouter from './routes/invoiceRoutes.js';
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use('/under-my-care', underMyCareRouter);
 app.use('/room', roomRouter);
 app.use('/doctor-slots', doctorSlotRouter);
 app.use('/clinic-services', clinicServicesRouter);
+app.use('/invoices', invoiceRouter);
 
 
 app.use(errorHandler);

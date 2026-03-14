@@ -1,6 +1,7 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 import crypto from "crypto";
+import { sendFamilyInvitationEmail } from "./gmailService.js";
 
 // ── In-memory share code store (TTL 15 min) ──
 const shareCodes = new Map();
@@ -104,6 +105,7 @@ export const getDependents = async (parentUserId) => {
                 full_name,
                 avatar_url,
                 status,
+                is_minor,
                 dob,
                 gender,
                 Patients (

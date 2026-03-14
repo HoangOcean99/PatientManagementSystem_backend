@@ -58,3 +58,15 @@ export const createUser = asyncHandler(async (req, res) => {
     },
   });
 });
+
+export const deleteUser = asyncHandler(async (req, res) => {
+  const userId = req.params.id;
+  if (!userId) throw new AppError("User ID is required", 400);
+  
+  await userServices.deleteUser(userId);
+  
+  res.status(200).json({
+    success: true,
+    message: "User deleted successfully",
+  });
+});
