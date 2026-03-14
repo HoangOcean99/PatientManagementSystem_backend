@@ -6,6 +6,7 @@ import {
   updatePatient,
   deletePatient,
 } from "../controllers/patientController.js";
+import { upload } from "../middlewares/uploadMiddleware.js";
 // import { auth, checkRole } from "../middlewares/auth.js";
 
 const patientRouter = express.Router();
@@ -23,7 +24,7 @@ patientRouter.get("/:id", getPatientById);
 
 // Update Patient
 // patientRouter.put("/:id", auth, checkRole(["admin"]), updatePatient);
-patientRouter.put("/:id", updatePatient);
+patientRouter.put("/update", upload.single("avatar"), updatePatient);
 
 // Delete Patient
 patientRouter.delete("/:id", deletePatient);

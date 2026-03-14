@@ -1,6 +1,7 @@
 import { get } from "mongoose";
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
+import { updateAvatar } from "./userService.js";
 export const createPatient = async (payload) => {
   const { data, error } = await supabase
     .from("Patients")
@@ -20,9 +21,6 @@ export const getPatientById = async (patientId) => {
     .from("Patients")
     .select(`
       patient_id,
-      dob,
-      gender,
-      address,
       allergies,
       medical_history_summary,
       Users (
@@ -31,14 +29,17 @@ export const getPatientById = async (patientId) => {
         phone_number,
         avatar_url,
         status,
-        role
+        role,
+        dob,
+        gender,
+        address
       )
     `)
     .eq("patient_id", patientId)
     .single();
 
   if (error || !data) {
-    throw new AppError("Patient not found", 404);
+    throw new AppError(error.message, 404);
   }
 
   return data;
@@ -102,12 +103,13 @@ export const getPatientList = async ({
     },
   };
 };
-export const updatePatient = async (patientId, payload) => {
+export const updatePatient = async (payload, avatarFile) => {
+  const {patient_id} = payload
   // 1. Check patient exists
   const { data: existing, error: findError } = await supabase
     .from("Patients")
     .select("*")
-    .eq("patient_id", patientId)
+    .eq("patient_id", patient_id)
     .single();
 
   if (findError || !existing) {
@@ -115,7 +117,7 @@ export const updatePatient = async (patientId, payload) => {
   }
 
   // 2. Update Patients table
-  const patientFields = ["dob", "gender", "address", "allergies", "medical_history_summary"];
+  const patientFields = ["allergies", "medical_history_summary"];
   const patientPayload = {};
 
   patientFields.forEach((key) => {
@@ -126,7 +128,7 @@ export const updatePatient = async (patientId, payload) => {
     const { error: updatePatientError } = await supabase
       .from("Patients")
       .update(patientPayload)
-      .eq("patient_id", patientId);
+      .eq("patient_id", patient_id);
 
     if (updatePatientError) {
       throw new AppError(updatePatientError.message, 500);
@@ -134,7 +136,7 @@ export const updatePatient = async (patientId, payload) => {
   }
 
   // 3. Update Users table
-  const userFields = ["full_name", "phone_number", "avatar_url", "status"];
+  const userFields = ["full_name", "phone_number", "avatar_url", "status", "dob", "gender", "address"];
   const userPayload = {};
 
   userFields.forEach((key) => {
@@ -145,38 +147,15 @@ export const updatePatient = async (patientId, payload) => {
     const { error: updateUserError } = await supabase
       .from("Users")
       .update(userPayload)
-      .eq("user_id", patientId);
+      .eq("user_id", patient_id);
 
     if (updateUserError) {
       throw new AppError(updateUserError.message, 500);
     }
+      await updateAvatar(payload, avatarFile);
   }
 
-  // 4. Fetch updated data
-  const { data: fullData, error: fetchError } = await supabase
-    .from("Patients")
-    .select(
-      `
-    patient_id,
-    dob,
-    gender,
-    address,
-    Users (
-      full_name,
-      phone_number,
-      avatar_url,
-      status
-    )
-  `,
-    )
-    .eq("patient_id", patientId)
-    .single();
-
-  if (fetchError) {
-    throw new AppError(fetchError.message, 500);
-  }
-
-  return fullData;
+  return;
 };
 
 export const deletePatient = async (patientId) => {

@@ -88,7 +88,8 @@ export const syncUserGoogle = async (user) => {
         .upsert({
             user_id: user.id,
             email: user.email,
-            is_minor: false
+            is_minor: false,
+            avatar_url: user.user_metadata.avatar_url
         });
 
     if (upsertError) {

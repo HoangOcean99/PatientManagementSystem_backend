@@ -7,13 +7,17 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    data: users.map((u) => ({
-      user_id: u.user_id,
-      full_name: u.full_name,
-      email: u.email,
-      role: u.role,
-      status: u.status,
-      created_at: u.created_at,
+    data: users.map((user) => ({
+      user_id: user.user_id,
+      full_name: user.full_name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      dob: user.dob,
+      gender: user.gender,
+      address: user.address,
+      phone_number: user.phone_number,
+      avatar_url: user.avatar_url
     })),
   });
 });
@@ -33,7 +37,11 @@ export const getUserById = asyncHandler(async (req, res) => {
       email: user.email,
       role: user.role,
       status: user.status,
-      created_at: user.created_at,
+      dob: user.dob,
+      gender: user.gender,
+      address: user.address,
+      phone_number: user.phone_number,
+      avatar_url: user.avatar_url
     },
   });
 });
@@ -58,3 +66,26 @@ export const createUser = asyncHandler(async (req, res) => {
     },
   });
 });
+
+
+export const updateUserProfile = async (req, res, next) => {
+  try {
+
+    const userData = req.body;
+    const avatarFile = req.file || null;
+
+    const avatarUrl = await userServices.updateUserProfile(
+      userData,
+      avatarFile
+    );
+
+    res.json({
+      success: true,
+      message: "Update profile success",
+      avatar_url: avatarUrl
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};

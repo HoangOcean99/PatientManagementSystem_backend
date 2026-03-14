@@ -1,7 +1,7 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 import crypto from "crypto";
-import { sendFamilyInvitationEmail } from "./gmailService.js";
+// import { sendFamilyInvitationEmail } from "./gmailService.js";
 
 // ── In-memory share code store (TTL 15 min) ──
 const shareCodes = new Map();
@@ -380,7 +380,7 @@ export const inviteByEmail = async (parentUserId, targetEmail, relationship) => 
     });
 
     // 6. Send email
-    await sendFamilyInvitationEmail(targetEmail, inviterName, code);
+    // await sendFamilyInvitationEmail(targetEmail, inviterName, code);
 
     return {
         message: "Invitation sent successfully",

@@ -1,5 +1,6 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
+import { updateAvatar } from "./userService.js";
 
 export const getAllDoctors = async () => {
   const { data, error } = await supabase
@@ -54,7 +55,10 @@ export const getDoctorById = async (doctorId) => {
         email,
         phone_number,
         avatar_url,
-        status
+        status,
+        address,
+        dob,
+        gender
     ),
     Rooms (
         room_id,
@@ -86,7 +90,10 @@ export const searchDoctors = async ({ name, specialization, status }) => {
                 email,
                 phone_number,
                 avatar_url,
-                status
+                status,
+                address,
+                gender,
+                dob
             ),
             Rooms (
                 room_id,
@@ -120,24 +127,25 @@ export const searchDoctors = async ({ name, specialization, status }) => {
   return data;
 };
 
-export const updateDoctor = async (doctorId, updateData) => {
-  const existingDoctor = await getDoctorById(doctorId);
+export const updateDoctor = async (updateData, avatarFile) => {
+  console.log(updateData);
+  const { doctor_id } = updateData;
+  const existingDoctor = await getDoctorById(doctor_id);
   if (!existingDoctor) {
     throw new AppError("No doctor found with that ID", 404);
   }
 
-  // Tách dữ liệu cho bảng Doctors và Users
   const {
-    // Doctor fields
     specialization,
     bio,
     room_id,
     department_id,
-    // User fields
     full_name,
     phone_number,
-    avatar_url,
     status,
+    address,
+    dob,
+    gender
   } = updateData;
 
   const doctorUpdates = {};
@@ -150,32 +158,35 @@ export const updateDoctor = async (doctorId, updateData) => {
   const userUpdates = {};
   if (full_name !== undefined) userUpdates.full_name = full_name;
   if (phone_number !== undefined) userUpdates.phone_number = phone_number;
-  if (avatar_url !== undefined) userUpdates.avatar_url = avatar_url;
   if (status !== undefined) userUpdates.status = status;
+  if (address !== undefined) userUpdates.address = address;
+  if (dob !== undefined) userUpdates.dob = dob;
+  if (gender !== undefined) userUpdates.gender = gender;
 
   const updatePromises = [];
 
   if (Object.keys(doctorUpdates).length > 0) {
     updatePromises.push(
-      supabase.from("Doctors").update(doctorUpdates).eq("doctor_id", doctorId),
+      supabase.from("Doctors").update(doctorUpdates).eq("doctor_id", doctor_id),
     );
   }
 
   if (Object.keys(userUpdates).length > 0) {
-    // doctor_id === user_id (quan hệ 1-1: Users → Doctors)
     updatePromises.push(
-      supabase.from("Users").update(userUpdates).eq("user_id", doctorId),
+      supabase.from("Users").update(userUpdates).eq("user_id", doctor_id),
     );
   }
-
+  let results = null;
   if (updatePromises.length > 0) {
-    const results = await Promise.all(updatePromises);
+    results = await Promise.all(updatePromises);
     for (const res of results) {
       if (res.error) throw new AppError(res.error.message, 500);
     }
   }
 
-  return await getDoctorById(doctorId);
+  await updateAvatar(updateData, avatarFile);
+
+  return results;
 };
 
 export const createDoctorProfile = async (userId, profileData) => {
@@ -282,20 +293,20 @@ export const getDoctorAppointmentsByDoctorId = async (
     return data.filter((appt) => appt.DoctorSlots?.slot_date === date);
   }
 
-    return data;
+  return data;
 };
 
 export const getDoctorByDepartmentId = async (departmentId) => {
-    const { data, error } = await supabase
-        .from('Doctors')
-        .select(`
+  const { data, error } = await supabase
+    .from('Doctors')
+    .select(`
         doctor_id,
         Departments!inner ( department_id, name ),
         Users!inner ( user_id, full_name, email, phone_number, avatar_url, status)
         `)
-        .eq('department_id', departmentId);
+    .eq('department_id', departmentId);
 
-    if (error) throw new AppError(error.message, 500);
+  if (error) throw new AppError(error.message, 500);
 
-    return data;
+  return data;
 };

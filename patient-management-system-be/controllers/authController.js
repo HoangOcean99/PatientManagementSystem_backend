@@ -29,7 +29,6 @@ export const verifyAndCreateUser = asyncHandler(async (req, res) => {
 
 
 export const syncUserGoogle = asyncHandler(async (req, res) => {
-    console.log(req.user);
     const data = await authService.syncUserGoogle(req.user);
     res.status(200).json({
         success: true,

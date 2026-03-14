@@ -44,15 +44,10 @@ export const searchDoctors = asyncHandler(async (req, res, next) => {
 });
 
 export const updateDoctor = asyncHandler(async (req, res, next) => {
-    // Lấy ID từ params (chuẩn RESTful: /doctors/update/:id) 
-    const { doctorId } = req.params;
     const updateData = req.body;
+    const avatarFile = req.file || null;
 
-    if (!doctorId) {
-        return next(new AppError('Doctor ID is required', 400));
-    }
-
-    const updatedDoctor = await doctorService.updateDoctor(doctorId, updateData);
+    const updatedDoctor = await doctorService.updateDoctor(updateData, avatarFile);
 
     if (!updatedDoctor) {
         return next(new AppError('Doctor not found or update failed', 404));
