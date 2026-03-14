@@ -36,7 +36,10 @@ export const addDependent = async (parentUserId, dependentData) => {
             email: fakeEmail,
             full_name,
             role: "patient",
-            is_minor: finalIsMinor
+            is_minor: finalIsMinor,
+            dob,
+            gender: gender || "other",
+            address
         }])
         .select()
         .single();
@@ -49,9 +52,6 @@ export const addDependent = async (parentUserId, dependentData) => {
         .from("Patients")
         .insert([{
             patient_id: newUserId,
-            dob,
-            gender: gender || "other",
-            address,
             allergies,
             medical_history_summary
         }]);
@@ -104,9 +104,9 @@ export const getDependents = async (parentUserId) => {
                 full_name,
                 avatar_url,
                 status,
+                dob,
+                gender,
                 Patients (
-                    dob,
-                    gender,
                     allergies,
                     medical_history_summary
                 )
@@ -136,10 +136,10 @@ export const getDependentDetail = async (parentUserId, relationshipId) => {
                 email,
                 status,
                 is_minor,
+                dob,
+                gender,
+                address,
                 Patients (
-                    dob,
-                    gender,
-                    address,
                     allergies,
                     medical_history_summary
                 )
@@ -177,11 +177,14 @@ export const updateDependent = async (parentUserId, relationshipId, updateData) 
     const childUserId = relation.child_user_id;
     const { username, is_minor, full_name, dob, gender, address, allergies, medical_history_summary, relationship } = updateData;
 
-    // Update Users table if provided
+    // Update Users table if provided (includes dob, gender, address)
     const userUpdatePayload = {};
     if (full_name !== undefined) userUpdatePayload.full_name = full_name;
     if (username !== undefined) userUpdatePayload.username = username;
     if (is_minor !== undefined) userUpdatePayload.is_minor = is_minor;
+    if (dob !== undefined) userUpdatePayload.dob = dob;
+    if (gender !== undefined) userUpdatePayload.gender = gender;
+    if (address !== undefined) userUpdatePayload.address = address;
 
     if (Object.keys(userUpdatePayload).length > 0) {
         const { error: userErr } = await supabase
@@ -192,11 +195,8 @@ export const updateDependent = async (parentUserId, relationshipId, updateData) 
         if (userErr) throw new AppError(`Error updating user: ${userErr.message}`, 500);
     }
 
-    // Update Patients table if any patient fields provided
+    // Update Patients table if any patient-specific fields provided
     const patientFields = {};
-    if (dob !== undefined) patientFields.dob = dob;
-    if (gender !== undefined) patientFields.gender = gender;
-    if (address !== undefined) patientFields.address = address;
     if (allergies !== undefined) patientFields.allergies = allergies;
     if (medical_history_summary !== undefined) patientFields.medical_history_summary = medical_history_summary;
 
