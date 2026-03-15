@@ -14,9 +14,6 @@ const validate = (req, res, next) => {
  * Validator cho tạo 1 slot
  */
 export const createSlotValidator = [
-    body('doctor_id')
-        .notEmpty().withMessage('Doctor ID is required')
-        .isUUID().withMessage('Doctor ID must be a valid UUID'),
 
     body('slot_date')
         .notEmpty().withMessage('Slot date is required')
