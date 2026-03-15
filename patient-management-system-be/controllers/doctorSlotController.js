@@ -1,4 +1,5 @@
 import * as doctorSlotService from '../services/doctorSlotService.js';
+import * as doctorService from "../services/doctorService.js";
 import asyncHandler from '../utils/async-handler.js';
 import { AppError } from '../utils/app-error.js';
 
@@ -142,10 +143,6 @@ export const deleteBulkSlots = asyncHandler(async (req, res, next) => {
         message: `${slot_ids.length} slot(s) deleted successfully`
     });
 });
-import * as doctorSlotService from "../services/doctorSlotService.js";
-import * as doctorService from "../services/doctorService.js";
-import { AppError } from "../utils/app-error.js";
-
 
 export const getListDoctorSlots = async (req, res) => {
     const doctorSlots = await doctorSlotService.getListDoctorSlots();
@@ -155,9 +152,9 @@ export const getListDoctorSlots = async (req, res) => {
 export const getDoctorSlotById = async (req, res) => {
     const doctorSlot = await doctorSlotService.getDoctorSlotById(req.params.slot_id);
     res.status(200).json(doctorSlot);
-}  
+}
 
-export const getAvailableDoctorSlotsByDoctorIdAndDate = async (req, res, next) => {  
+export const getAvailableDoctorSlotsByDoctorIdAndDate = async (req, res, next) => {
     try {
         const { doctor_id, start_date, end_date } = req.body;
 
@@ -193,7 +190,7 @@ export const createDoctorSlot = async (req, res, next) => {
         res.status(200).json({
             success: true,
             message: "Tạo khung giờ thành công",
-            data: newDoctorSlot 
+            data: newDoctorSlot
         });
     } catch (error) {
         next(error); // Chuyển lỗi sang middleware xử lý lỗi

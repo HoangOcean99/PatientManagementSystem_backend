@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import express from 'express';
-import path from 'path';  
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import baseRouter from './routes/baseRoutes.js';
@@ -13,20 +12,14 @@ import userRouter from "./routes/userRoutes.js";
 import cors from 'cors';
 import medicalRecordRouter from './routes/medicalRecordRoutes.js';
 import labOrderRouter from './routes/labOrderRoutes.js';
-import roomRoutes from './routes/roomRoutes.js';
 import appointmentRouter from './routes/appointmentRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import serviceRoutes from './routes/ClinicServicesRoutes.js';
 import systemConfigRoutes from './routes/systemConfigRoutes.js';
 import doctorAssignmentRouter from './routes/doctorAssignmentRoutes.js';
 import underMyCareRouter from './routes/underMyCareRoutes.js';
-import listEndpoints from 'express-list-endpoints';
-
-
-import appointmentRouter from './routes/appointmentRoutes.js';
 import roomRouter from './routes/roomRoutes.js';
-import doctorSlotRouter from './routes/doctorSlotRoutes.js'; 
-import departmentRouter from './routes/departmentRoutes.js';
+import doctorSlotRouter from './routes/doctorSlotRoutes.js';
 import clinicServicesRouter from './routes/clinicRoutes.js';
 
 const app = express();
@@ -59,12 +52,11 @@ app.use('/patients', patientRouter);
 app.use('/appointment', appointmentRouter);
 app.use('/room', roomRouter);
 app.use('/doctor-slots', doctorSlotRouter);
-app.use('/departments', departmentRouter);
 app.use('/clinic-services', clinicServicesRouter);
 app.use(express.json());
 
 
 app.use(errorHandler);
 //console.table(listEndpoints(app));
-export default app; 
+export default app;
 
