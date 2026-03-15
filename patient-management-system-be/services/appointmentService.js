@@ -3,6 +3,7 @@ import { AppError } from "../utils/app-error.js";
 import { getPriceByServiceId } from "./clinicServices.js";
 
 
+
 // Kiểm tra ngày có đúng chuẩn YYYY-MM-DD không
 const isValidDate = (dateString) => {
   const regex = /^\d{4}-\d{2}-\d{2}$/;
@@ -19,13 +20,18 @@ const isValidTime = (timeString) => {
 
 export const getListAppointments = async (date) => {
   let query = supabase.from('Appointments').select(`
-      appointment_id,
-      status,
-      DoctorSlots!inner ( slot_id, start_time, end_time, slot_date),
-      Patients!inner ( patient_id, Users!inner ( full_name, email )),
-      Doctors!inner ( doctor_id, Users!inner ( full_name, email ) ),
-      ClinicServices!inner ( service_id, name, Departments!inner ( department_id, name ) )
-    `);
+        appointment_id,
+        status,
+        currentSymptom,
+        total_price,
+        deposit_required,
+        deposit_paid,
+        created_at,
+        DoctorSlots!inner ( slot_id, start_time, end_time, slot_date),
+        Patients!inner ( patient_id, Users!inner ( full_name, email )),
+        Doctors!inner ( doctor_id, Users!inner ( full_name, email ) ),
+        ClinicServices!inner ( service_id, name, Departments!inner ( department_id, name ) )
+      `);
 
   if (date) {
     query = query.eq('DoctorSlots.slot_date', date);
@@ -34,6 +40,11 @@ export const getListAppointments = async (date) => {
   if (error) {
     throw new Error(`Lỗi khi lấy danh sách lịch: ${error.message}`);
   }
+  // Nếu appointments là null hoặc mảng rỗng thì trả về mảng rỗng luôn, không sort
+  if (!appointments || appointments.length === 0) {
+    return [];
+  }
+
   return appointments.sort((a, b) =>
     a.DoctorSlots.start_time.localeCompare(b.DoctorSlots.start_time)
   );
@@ -219,7 +230,7 @@ export const rescheduleAppointment = async (appointment_id, new_slot_id, updates
     }
 
     // 4. Reschedule chỉ nên đổi slot (và status). 
-    const allowedExtraFields = [];
+    const allowedExtraFields = ['doctor_id'];
     const safeExtraUpdates = {};
     if (updates && typeof updates === 'object') {
       for (const key of allowedExtraFields) {
@@ -236,6 +247,7 @@ export const rescheduleAppointment = async (appointment_id, new_slot_id, updates
         ...safeExtraUpdates,
         slot_id: normalizedNewSlotId,
         status: 'pending'
+
       })
       .eq('appointment_id', appointment_id)
       .select()
@@ -243,7 +255,10 @@ export const rescheduleAppointment = async (appointment_id, new_slot_id, updates
 
     if (updateError) {
       // Rollback slot mới nếu update Appointment fail
-      await supabase.from('DoctorSlots').update({ is_booked: false }).eq('slot_id', normalizedNewSlotId);
+      await supabase
+        .from('DoctorSlots')
+        .update({ is_booked: false })
+        .eq('slot_id', normalizedNewSlotId)
 
       // Nếu lỗi do gửi field không tồn tại (schema cache), trả về message dễ hiểu hơn
       if (String(updateError.message || '').includes("Could not find the") && String(updateError.message || '').includes("in the schema cache")) {
@@ -375,8 +390,44 @@ export const approveAppointment = async (appointment_id, deposit_paid, currentUs
   return updatedAppt;
 };
 
+export const updateAppointmentStatus = async (appointment_id, status) => {
+  const { data: appointment, error: fetchError } = await supabase
+    .from('Appointments')
+    .update({ status: status })
+    .eq('appointment_id', appointment_id)
+    .select()
+    .single();
+
+  if (fetchError || !appointment) throw new AppError('Lịch khám không tồn tại', 404);
+  return appointment;
+}
 
 
+export const getTodayCheckedInAppointments = async () => {
+  // 1. Lấy ngày hôm nay chuẩn YYYY-MM-DD
+  const today = new Date();
+  const dateString = today.toLocaleDateString('en-CA');
 
+  // 2. Query Supabase
+  const { data: checkedInAppointments, error } = await supabase
+    .from('Appointments') // Nhớ check xem bảng tên là Appointments hay appointments
+    .select(`
+      appointment_id,
+      status,
+      created_at,
+      Patients ( patient_id, Users ( full_name, avatar_url ) ),
+      Doctors ( doctor_id, Users ( full_name, email ) ),
+      ClinicServices ( name, Departments ( name ) ),
+      DoctorSlots!inner ( start_time, end_time, slot_date ) 
+    `)
+    .in('status', ['checked_in', 'assigned'])
+    // Thử comment dòng ngày tháng này lại xem API có chạy được không đã:
+    // .eq('DoctorSlots.slot_date', dateString) 
+    .order('created_at', { ascending: true });
 
+  if (error) {
+    throw new AppError(`Lỗi lấy danh sách điều phối: ${error.message}`, 500);
+  }
 
+  return checkedInAppointments;
+};

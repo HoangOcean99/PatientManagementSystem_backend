@@ -1,6 +1,7 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 import * as doctorService from "../services/doctorService.js";
+import * as appointmentService from "../services/appointmentService.js";
 
 export const getListDoctorSlots = async () => {
   const { data, error } = await supabase.from('DoctorSlots').select('*');
@@ -21,7 +22,7 @@ export const getDoctorSlotById = async (slot_id) => {
     .single();
   if (error) throw new AppError(error.message, 500);
   return data || null || undefined || [];
-} 
+}
 
 export const getAvailableDoctorSlotsByDoctorIdAndDate = async (doctor_id, start_date, end_date) => {
   // 1. Lấy thời điểm hiện tại để lọc bỏ các slot trong quá khứ (ngay cả khi trong cùng ngày)
@@ -98,3 +99,56 @@ export const createDoctorSlot = async (doctor_id, slot_date, start_time, end_tim
   if (createError) throw new AppError(createError.message, 500);
   return newDoctorSlot;
 }
+
+export const getAvailableDoctorSlotsByDate = async (department_id, date) => {
+  const { data: slots, error } = await supabase
+    .from('DoctorSlots')
+    .select(`
+      slot_id,
+      slot_date,
+      start_time,
+      end_time,
+      doctor_id,
+      Appointments(appointment_id, status),
+      Doctors!inner (
+        doctor_id,
+        department_id,
+        Users (full_name)
+      )
+    `)
+    .eq('slot_date', date)
+    .eq('is_booked', false)
+    .eq('Doctors.department_id', department_id)
+    .order('start_time', { ascending: true });
+
+  if (error) throw new AppError(error.message, 500);
+  if (!slots || slots.length === 0) return [];
+
+  const now = new Date();
+  const availableSlots = slots.filter(slot => {
+    // Lọc bỏ slot đã trôi giờ
+    const slotDateTime = new Date(`${slot.slot_date}T${slot.start_time}`);
+    if (slotDateTime < now) return false;
+
+    // Lọc bỏ slot có Appointment pending/confirmed
+    const appointments = Array.isArray(slot.Appointments)
+      ? slot.Appointments
+      : (slot.Appointments ? [slot.Appointments] : []);
+
+    // Kiểm tra nếu có appointment với status pending hoặc confirmed thì slot không available
+    const hasActiveAppointment = appointments.some(
+      app => app && (app.status === 'pending' || app.status === 'confirmed')
+    );
+
+    return !hasActiveAppointment;
+  });
+
+  return availableSlots.map(slot => ({
+    slot_id: slot.slot_id,
+    slot_date: slot.slot_date,
+    start_time: slot.start_time?.substring(0, 5) || slot.start_time,
+    end_time: slot.end_time?.substring(0, 5) || slot.end_time,
+    doctor_id: slot.doctor_id,
+    Doctors: slot.Doctors
+  }));
+} 

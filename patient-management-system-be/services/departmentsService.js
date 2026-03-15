@@ -36,3 +36,18 @@ export const deleteDepartment = async (departmentId) => {
    if (error) throw new AppError(error.message, 500);
    return data;
 }
+
+export const getDepartments = async () => {
+   try {
+      const { data, error } = await supabase
+         .from('Departments')
+         .select('department_id, name')
+         .order('name', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+   } catch (error) {
+      console.error("Lỗi lấy chuyên khoa:", error.message);
+      return [];
+   }
+};

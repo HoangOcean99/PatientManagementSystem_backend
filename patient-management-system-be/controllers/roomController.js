@@ -28,7 +28,7 @@ export const updateRoom = asyncHandler(async (req, res) => {
   const { room } = req.body;
   const updatedRoom = await roomService.updateRoom(roomId, room);
   return res.json(updatedRoom);
-}); 
+});
 
 export const deleteRoom = asyncHandler(async (req, res) => {
   const { roomId } = req.params;

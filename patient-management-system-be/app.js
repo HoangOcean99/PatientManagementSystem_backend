@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
-import path from 'path';  
+import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import baseRouter from './routes/BaseRoutes.js';
@@ -15,10 +15,11 @@ import listEndpoints from 'express-list-endpoints';
 
 import appointmentRouter from './routes/appointmentRoutes.js';
 import roomRouter from './routes/roomRoutes.js';
-import doctorSlotRouter from './routes/doctorSlotRoutes.js'; 
+import doctorSlotRouter from './routes/doctorSlotRoutes.js';
 import departmentRouter from './routes/departmentRoutes.js';
 import clinicServicesRouter from './routes/clinicRoutes.js';
 import userRouter from './routes/userRoutes.js';
+import receptionistRouter from './routes/receptionistRoutes.js';
 const app = express();
 
 app.use(cors({
@@ -42,10 +43,11 @@ app.use('/doctor-slots', doctorSlotRouter);
 app.use('/departments', departmentRouter);
 app.use('/clinic-services', clinicServicesRouter);
 app.use('/users', userRouter);
+app.use('/receptionist', receptionistRouter);
 app.use(express.json());
 
 
 app.use(errorHandler);
 //console.table(listEndpoints(app));
-export default app; 
+export default app;
 

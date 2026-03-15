@@ -4,7 +4,8 @@ import * as gmailService from "../services/gmailService.js";
 
 
 export const getListAppointments = asyncHandler(async (req, res) => {
-  const response = await appointmentService.getListAppointments();
+  const { date } = req.query;
+  const response = await appointmentService.getListAppointments(date);
   return res.json(response);
 });
 
@@ -114,5 +115,30 @@ export const getListAppointmentsByAppointmentId = asyncHandler(async (req, res) 
     message: "Lấy thông tin lịch khám theo appointment_id thành công",
     data: appointment || null
   });
+});
+
+export const updateAppointmentStatus = asyncHandler(async (req, res) => {
+  const { appointment_id } = req.params;
+  const { status } = req.body;
+  const appointment = await appointmentService.updateAppointmentStatus(appointment_id, status);
+  return res.status(200).json({
+    message: "Cập nhật trạng thái lịch khám thành công",
+    data: appointment
+  });
+});
+
+export const getTodayCheckedInAppointments = asyncHandler(async (req, res) => {
+  const appointments = await appointmentService.getTodayCheckedInAppointments();
+  try {
+    return res.status(200).json({
+      message: "Lấy danh sách chờ điều phối hôm nay thành công",
+      data: appointments
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Lấy danh sách chờ điều phối hôm nay thất bại",
+      data: error.message
+    });
+  }
 });
 

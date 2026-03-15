@@ -7,6 +7,8 @@ import { getListPendingAppointment } from "../controllers/appointmentController.
 import { rescheduleAppointment } from "../controllers/appointmentController.js";
 import { getListAppointmentsByAppointmentId } from "../controllers/appointmentController.js";
 import { getListAppointmentsByStatus } from "../controllers/appointmentController.js";
+import { updateAppointmentStatus } from "../controllers/appointmentController.js";
+import { getTodayCheckedInAppointments } from "../controllers/appointmentController.js";
 const appointmentRouter = express.Router();
 
 appointmentRouter.get('/getList', getListAppointments);
@@ -17,4 +19,6 @@ appointmentRouter.post('/reschedule/:appointment_id', rescheduleAppointment);
 appointmentRouter.patch('/cancel/:appointment_id', cancelAppointment);
 appointmentRouter.put('/approve/:appointment_id', approveAppointment);
 appointmentRouter.get('/pending', getListPendingAppointment);
-export default appointmentRouter; 
+appointmentRouter.patch('/updateStatus/:appointment_id', updateAppointmentStatus);
+appointmentRouter.get('/todayCheckedIn', getTodayCheckedInAppointments);
+export default appointmentRouter;  

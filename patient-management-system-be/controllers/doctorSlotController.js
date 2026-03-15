@@ -56,3 +56,19 @@ export const createDoctorSlot = async (req, res, next) => {
         next(error); // Chuyển lỗi sang middleware xử lý lỗi
     }
 }
+
+ export const getAvailableDoctorSlotsByDate = async (req, res, next) => {
+    try {
+        const { department_id, date } = req.body;
+        console.log("Dữ liệu nhận được:", { department_id, date });
+        if (!department_id || !date) {
+            return res.status(400).json({ message: "Thiếu thông tin department_id hoặc date!" });
+        }
+        const availableDoctorSlots = await doctorSlotService.getAvailableDoctorSlotsByDate(department_id, date);
+        res.status(200).json(availableDoctorSlots);
+    } catch (error) {
+        next(error);    
+    }
+ }
+
+         
