@@ -120,3 +120,14 @@ export const updateAvatar = async (userData, avatarFile = null) => {
     throw err;
   }
 }
+export const deleteUser = async (userId) => {
+  const { data, error } = await supabase
+    .from("Users")
+    .delete()
+    .eq("user_id", userId)
+    .select()
+    .single();
+    
+  if (error) throw new AppError(error.message, 400);
+  return data;
+};

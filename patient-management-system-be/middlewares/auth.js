@@ -34,3 +34,17 @@ export const requireRole = (roles = []) => {
     next();
   };
 };
+
+export const checkDependentAccess = async (parentId, childId) => {
+  if (parentId === childId) return true;
+
+  const { data, error } = await supabase
+    .from('FamilyRelationships')
+    .select('relationship_id')
+    .eq('parent_user_id', parentId)
+    .eq('child_user_id', childId)
+    .single();
+
+  if (error || !data) return false;
+  return true;
+};

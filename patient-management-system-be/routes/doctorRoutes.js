@@ -18,6 +18,7 @@ doctorRouter.patch('/update/:doctorId', updateDoctorById);
 doctorRouter.get('/get-doctors-by-department/:departmentId', getDoctorByDepartmentId);
 doctorRouter.post('/create', createDoctor);
 doctorRouter.delete('/delete/:doctorId', deleteDoctorById);
+doctorRouter.get('/list', getAllDoctors);
 
 export default doctorRouter;
 

@@ -159,4 +159,46 @@ export const sendAppointmentConfirmation = async (email, appointmentData) => {
 
     // 6. Gửi mail đi cùng file ics
     await sendMailWithIcal(email, "[MedSchedule] Xác nhận lịch hẹn thành công", htmlContent, icsContent);
+};
+
+// ── Send Family Invitation Email ──
+export const sendFamilyInvitationEmail = async (targetEmail, inviterName, code) => {
+    const htmlContent = `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #f0f0f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="background-color: #0284c7; padding: 30px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px; letter-spacing: 1px;">MedSchedule</h1>
+            <p style="color: #e0f2fe; margin-top: 5px; font-size: 14px;">Lời mời liên kết gia đình</p>
+        </div>
+        
+        <div style="padding: 40px 30px; color: #334155; line-height: 1.6;">
+            <h2 style="color: #0f172a; font-size: 20px; margin-bottom: 20px; text-align: center;">Lời mời liên kết gia đình</h2>
+            
+            <p>Xin chào,</p>
+            <p><b>${inviterName}</b> đã gửi lời mời liên kết tài khoản gia đình trên hệ thống MedSchedule.</p>
+            <p>Vui lòng sử dụng mã dưới đây để chấp nhận lời mời:</p>
+            
+            <div style="text-align: center; margin: 35px 0;">
+                <div style="display: inline-block; padding: 20px 40px; background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px;">
+                    <span style="font-family: 'Courier New', Courier, monospace; color: #0284c7; font-size: 36px; font-weight: bold; letter-spacing: 8px;">
+                        ${code}
+                    </span>
+                </div>
+            </div>
+            
+            <p style="font-size: 14px; color: #64748b; text-align: center;">
+                Mã này sẽ hết hạn sau <b style="color: #ef4444;">24 giờ</b>.<br>
+                Vì lý do an toàn, tuyệt đối không chia sẻ mã này cho bất kỳ ai.
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 30px 0;">
+            
+            <div style="text-align: center;">
+                <p style="font-size: 12px; color: #94a3b8; margin: 0;">© 2026 MedSchedule. Tất cả quyền được bảo lưu.</p>
+                <p style="font-size: 12px; color: #94a3b8; margin: 5px 0 0;">Đây là email tự động, vui lòng không phản hồi.</p>
+            </div>
+        </div>
+    </div>
+    `;
+
+    await sendMail(targetEmail, "[MedSchedule] Lời mời liên kết gia đình", htmlContent);
 }; 

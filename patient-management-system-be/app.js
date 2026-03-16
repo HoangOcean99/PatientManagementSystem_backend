@@ -13,17 +13,19 @@ import userRouter from "./routes/userRoutes.js";
 import cors from 'cors';
 import medicalRecordRouter from './routes/medicalRecordRoutes.js';
 import labOrderRouter from './routes/labOrderRoutes.js';
+
 import appointmentRouter from './routes/appointmentRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
-import serviceRoutes from './routes/ClinicServicesRoutes.js';
+import serviceRoutes from './routes/clinicServicesRoutes.js';
 import systemConfigRoutes from './routes/systemConfigRoutes.js';
 import doctorAssignmentRouter from './routes/doctorAssignmentRoutes.js';
 import underMyCareRouter from './routes/underMyCareRoutes.js';
 import roomRouter from './routes/roomRoutes.js';
 import doctorSlotRouter from './routes/doctorSlotRoutes.js';
-import departmentRouter from './routes/departmentRoutes.js';
 import clinicServicesRouter from './routes/clinicRoutes.js';
 import receptionistRouter from './routes/receptionistRoutes.js';
+import invoiceRouter from './routes/invoiceRoutes.js';
+
 const app = express();
 
 app.use(cors({
@@ -50,13 +52,11 @@ app.use('/clinic-service', serviceRoutes);
 app.use('/system-config', systemConfigRoutes);
 app.use('/doctor-assignments', doctorAssignmentRouter);
 app.use('/under-my-care', underMyCareRouter);
-app.use('/patients', patientRouter);
+app.use('/receptionist', receptionistRouter);
 app.use('/room', roomRouter);
 app.use('/doctor-slots', doctorSlotRouter);
 app.use('/clinic-services', clinicServicesRouter);
-app.use('/users', userRouter);
-app.use('/receptionist', receptionistRouter);
-app.use(express.json());
+app.use('/invoices', invoiceRouter);
 
 
 app.use(errorHandler);
