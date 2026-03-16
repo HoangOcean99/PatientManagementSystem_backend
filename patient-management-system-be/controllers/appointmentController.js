@@ -1,6 +1,8 @@
 import * as appointmentService from "../services/appointmentService.js";
 import asyncHandler from "../utils/async-handler.js";
 import * as gmailService from "../services/gmailService.js";
+import { checkDependentAccess } from "../middlewares/auth.js";
+import { AppError } from "../utils/app-error.js";
 
 
 export const getListAppointments = asyncHandler(async (req, res) => {
@@ -19,6 +21,11 @@ export const createAppointmentForPatient = async (req, res, next) => {
   try {
     // Bệnh nhân chỉ gửi những thông tin này lên
     const { patient_id, doctor_id, service_id, slot_id, role } = req.body;
+
+    const hasAccess = await checkDependentAccess(req.user.id, patient_id);
+    if (!hasAccess) {
+        return next(new AppError('You do not have permission to book for this patient', 403));
+    }
 
     // Không cần gọi createDoctorSlot nữa!
     const newAppointment = await appointmentService.createAppointment(

@@ -162,7 +162,6 @@ export const startExamination = async (appointmentId, doctorId, patientId) => {
         .insert([{
             appointment_id: appointmentId,
             doctor_id: doctorId,
-            patient_id: patientId,
             diagnosis: ''
         }])
         .select()
@@ -181,16 +180,17 @@ export const getMedicalRecordById = async (recordId) => {
         .from('MedicalRecords')
         .select(`
             *,
-            Patients (
-                Users (full_name, phone_number)
+            Appointments (
+                status,
+                patient_id,
+                DoctorSlots (slot_date, start_time),
+                Patients (
+                    Users (full_name, phone_number)
+                )
             ),
             Doctors (
                 specialization,
                 Users (full_name)
-            ),
-            Appointments (
-                status,
-                DoctorSlots (slot_date, start_time)
             ),
             Prescriptions (*),
             LabOrders (*)
@@ -222,20 +222,24 @@ export const getMedicalRecordsByPatient = async (patientId) => {
         .from('MedicalRecords')
         .select(`
             *,
-            Doctors (
-                Users (full_name)
-            ),
-            Appointments (
+            Appointments!inner (
                 status,
-                DoctorSlots (slot_date, start_time)
+                patient_id,
+                DoctorSlots (slot_date, start_time),
+                Doctors (
+                    Users (full_name)
+                )
             ),
             Prescriptions (*),
             LabOrders (*)
         `)
-        .eq('patient_id', patientId)
+        .eq('Appointments.patient_id', patientId)
         .order('created_at', { ascending: false });
 
-    if (error) throw new AppError(error.message, 500);
+    if (error) {
+        console.log(error);
+        throw new AppError(error.message, 500);
+    }
     return data;
 };
 

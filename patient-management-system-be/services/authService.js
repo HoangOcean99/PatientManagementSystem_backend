@@ -118,13 +118,27 @@ export const syncUserGoogle = async (user) => {
     if (upsertError) {
         throw upsertError;
     }
+
     const { data, error } = await supabase
         .from('Users')
         .select('role')
         .eq('user_id', user.id)
         .maybeSingle();
+
     if (error) {
         throw error;
+    }
+
+    // Auto-create/upsert patient profile if the role is 'patient'
+    if (data.role === 'patient') {
+        const { error: patientUpsertError } = await supabase
+            .from('Patients')
+            .upsert({ patient_id: user.id }, { onConflict: 'patient_id' });
+
+        if (patientUpsertError) {
+            console.error("Error auto-creating patient profile during Google Sync:", patientUpsertError);
+            throw new AppError(`Error creating patient profile: ${patientUpsertError.message}`, 500);
+        }
     }
 
     return {

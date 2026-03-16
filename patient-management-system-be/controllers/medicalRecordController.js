@@ -1,12 +1,13 @@
 import * as medicalRecordService from '../services/medicalRecordService.js';
 import asyncHandler from '../utils/async-handler.js';
 import { AppError } from '../utils/app-error.js';
+import { checkDependentAccess } from '../middlewares/auth.js';
 
 export const startExamination = asyncHandler(async (req, res, next) => {
     // Trong thực tế doctor_id sẽ lấy từ token (req.user.id), 
     // ở đây dùng body tạm thời cho việc test API
     const { appointment_id, doctor_id, patient_id } = req.params;
-    
+
     if (!appointment_id || !doctor_id || !patient_id) {
         return next(new AppError('Missing appointment_id, doctor_id, or patient_id', 400));
     }
@@ -28,7 +29,7 @@ export const updateMedicalRecord = asyncHandler(async (req, res, next) => {
     if (!recordId) {
         return next(new AppError('Record ID is required', 400));
     }
-    
+
     if (!doctor_id) {
         return next(new AppError('Doctor ID is required for authorization', 400));
     }
@@ -48,7 +49,7 @@ export const completeExamination = asyncHandler(async (req, res, next) => {
     if (!recordId) {
         return next(new AppError('Record ID is required', 400));
     }
-    
+
     if (!doctor_id) {
         return next(new AppError('Doctor ID is required for authorization', 400));
     }
@@ -101,6 +102,11 @@ export const getMedicalRecordsByPatient = asyncHandler(async (req, res, next) =>
     if (!patientId) {
         return next(new AppError('Patient ID is required', 400));
     }
+
+    // const hasAccess = await checkDependentAccess(req.user.id, patientId);
+    // if (!hasAccess) {
+    //     return next(new AppError('You do not have permission to access these records', 403));
+    // }
 
     const records = await medicalRecordService.getMedicalRecordsByPatient(patientId);
 
