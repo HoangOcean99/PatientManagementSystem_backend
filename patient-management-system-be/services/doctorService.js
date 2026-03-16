@@ -309,5 +309,30 @@ export const getDoctorByDepartmentId = async (departmentId) => {
 
   if (error) throw new AppError(error.message, 500);
 
-  return data;
+    return data;
 };
+
+export const createDoctor = async (doctor) => {
+    const { data, error } = await supabase.from('Doctors').insert(doctor).select(`
+        doctor_id,
+        department_id,
+        specialization,
+        bio,
+        room_number
+    `).select().single();
+    if (error) throw new AppError(error.message, 500);
+    return data;
+}
+
+export const updateDoctorById = async (doctorId, updateData) => {
+    const { data, error } = await supabase.from('Doctors').update(updateData).eq('doctor_id', doctorId).select().single();
+    if (error) throw new AppError(error.message, 500);
+    return data;
+}
+
+export const deleteDoctorById = async (doctorId) => {
+    const { data, error } = await supabase.from('Doctors').delete().eq('doctor_id', doctorId).select().single();
+    if (error) throw new AppError(error.message, 500);
+    return data;
+}
+

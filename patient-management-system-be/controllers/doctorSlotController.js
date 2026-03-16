@@ -150,11 +150,12 @@ export const getListDoctorSlots = async (req, res) => {
 export const getDoctorSlotById = async (req, res) => {
     const doctorSlot = await doctorSlotService.getDoctorSlotById(req.params.slot_id);
     res.status(200).json(doctorSlot);
-}  
+}
 
-export const getAvailableDoctorSlotsByDoctorIdAndDate = async (req, res, next) => {  
+export const getAvailableDoctorSlotsByDoctorIdAndDate = async (req, res, next) => {
     try {
         const { doctor_id, start_date, end_date } = req.body;
+        console.log(doctor_id, start_date, end_date);
 
         // Kiểm tra xem dữ liệu có đầy đủ không
         if (!doctor_id || !start_date || !end_date) {
@@ -188,9 +189,25 @@ export const createDoctorSlot = async (req, res, next) => {
         res.status(200).json({
             success: true,
             message: "Tạo khung giờ thành công",
-            data: newDoctorSlot 
+            data: newDoctorSlot
         });
     } catch (error) {
         next(error); // Chuyển lỗi sang middleware xử lý lỗi
     }
 }
+
+ export const getAvailableDoctorSlotsByDate = async (req, res, next) => {
+    try {
+        const { department_id, date } = req.body;
+        console.log("Dữ liệu nhận được:", { department_id, date });
+        if (!department_id || !date) {
+            return res.status(400).json({ message: "Thiếu thông tin department_id hoặc date!" });
+        }
+        const availableDoctorSlots = await doctorSlotService.getAvailableDoctorSlotsByDate(department_id, date);
+        res.status(200).json(availableDoctorSlots);
+    } catch (error) {
+        next(error);    
+    }
+ }
+
+         

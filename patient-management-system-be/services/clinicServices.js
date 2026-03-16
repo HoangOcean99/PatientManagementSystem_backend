@@ -47,3 +47,23 @@ export const getClinicServicesByDepartmentId = async (departmentId) => {
   if (error) throw new AppError(error.message, 500);
   return data;
 };
+
+  export const createClinicService = async (service) => {
+    const { data, error } = await supabase.from('ClinicServices').insert(service).select().single();
+    if (error) throw new AppError(error.message, 500);
+    if (!data || Object.keys(data).length === 0) {
+      throw new AppError("Không thể tạo dịch vụ mới", 400);
+    }
+    return data;
+  }
+
+export const updateClinicService = async (service_id, service) => {
+  const { data, error } = await supabase.from('ClinicServices').update(service).eq('service_id', service_id).select().single();
+  if (error) throw new AppError(error.message, 500);
+  return data;
+}
+
+export const deleteClinicService = async (service_id) => {  const { data, error } = await supabase.from('ClinicServices').delete().eq('service_id', service_id).select().single();
+  if (error) throw new AppError(error.message, 500);
+  return data;
+}

@@ -119,3 +119,36 @@ export const getPatientById = asyncHandler(async (req, res, next) => {
         data: patient
     });
 });
+
+export const createDoctor = asyncHandler(async (req, res, next) => {
+    const { doctor } = req.body;
+    const createdDoctor = await doctorService.createDoctor(doctor);
+
+    res.status(200).json({
+        status: 'success',
+        data: createdDoctor
+    });
+});
+
+export const updateDoctorById = asyncHandler(async (req, res, next) => {
+    const { doctorId } = req.params;
+    const updateData = req.body;
+
+    const updatedDoctor = await doctorService.updateDoctorById(doctorId, updateData);
+
+    res.status(200).json({
+        status: 'success',
+        data: updatedDoctor
+    });
+});
+
+export const deleteDoctorById = asyncHandler(async (req, res, next) => {
+    const { doctorId } = req.params;
+
+    const deletedDoctor = await doctorService.deleteDoctorById(doctorId);
+
+    res.status(200).json({
+        status: 'success',
+        data: deletedDoctor
+    });
+});

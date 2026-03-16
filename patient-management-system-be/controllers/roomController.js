@@ -32,3 +32,28 @@ export const updateStatusByDoctor = asyncHandler(async (req, res, next) => {
     data: updatedRoom
   });
 });
+
+export const createRoom = asyncHandler(async (req, res) => {
+  const { room } = req.body;
+  const newRoom = await roomService.createRoom(room);
+  return res.json(newRoom);
+});
+
+export const updateRoom = asyncHandler(async (req, res) => {
+  const { roomId } = req.params;
+  const { room } = req.body;
+  const updatedRoom = await roomService.updateRoom(roomId, room);
+  return res.json(updatedRoom);
+});
+
+export const deleteRoom = asyncHandler(async (req, res) => {
+  const { roomId } = req.params;
+  const deletedRoom = await roomService.deleteRoom(roomId);
+  return res.json(deletedRoom);
+});
+
+export const getRoomById = asyncHandler(async (req, res) => {
+  const { roomId } = req.params;
+  const room = await roomService.getRoomById(roomId);
+  return res.json(room);
+});

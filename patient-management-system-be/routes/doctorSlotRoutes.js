@@ -20,11 +20,14 @@ import {
     deleteBulkSlotsValidator
 } from '../middlewares/doctorSlotValidator.js';
 import { requireAuth } from '../middlewares/auth.js';
+import { getAvailableDoctorSlotsByDate } from "../controllers/doctorSlotController.js";
+
 
 const doctorSlotRouter = express.Router();
 doctorSlotRouter.get('/getList', getListDoctorSlots);
 doctorSlotRouter.get('/getById/:slot_id', getDoctorSlotById);
 doctorSlotRouter.post('/getAvailableDoctorSlotsByDoctorIdAndDate', getAvailableDoctorSlotsByDoctorIdAndDate);
+doctorSlotRouter.post('/getAvailableDoctorSlotsByDate', getAvailableDoctorSlotsByDate);
 doctorSlotRouter.post('/create', createDoctorSlot);
 
 // --- Public / Authenticated routes ---
