@@ -39,27 +39,30 @@ export const createPatient = async (payload) => {
   return data;
 };
 
+const PATIENT_SELECT_QUERY = `
+  patient_id,
+  allergies,
+  medical_history_summary,
+  Users!inner (
+    user_id,
+    username,
+    full_name,
+    email,
+    phone_number,
+    avatar_url,
+    status,
+    role,
+    is_minor,
+    dob,
+    gender,
+    address
+  )
+`;
+
 export const getPatientById = async (patientId) => {
   let { data, error } = await supabase
     .from("Patients")
-    .select(`
-      patient_id,
-      allergies,
-      medical_history_summary,
-      Users!inner (
-        username,
-        full_name,
-        email,
-        phone_number,
-        avatar_url,
-        status,
-        role,
-        is_minor,
-        dob,
-        gender,
-        address
-      )
-    `)
+    .select(PATIENT_SELECT_QUERY)
     .eq("patient_id", patientId)
     .single();
 
@@ -91,24 +94,7 @@ export const getPatientById = async (patientId) => {
     // 3. Fetch again
     const { data: newData, error: newError } = await supabase
       .from("Patients")
-      .select(`
-        patient_id,
-        allergies,
-        medical_history_summary,
-        Users!inner (
-          username,
-          full_name,
-          email,
-          phone_number,
-          avatar_url,
-          status,
-          role,
-          is_minor,
-          dob,
-          gender,
-          address
-        )
-      `)
+      .select(PATIENT_SELECT_QUERY)
       .eq("patient_id", patientId)
       .single();
 
@@ -131,26 +117,7 @@ export const getPatientList = async ({
 }) => {
   let query = supabase
     .from("Patients")
-    .select(
-      `
-      patient_id,
-      allergies,
-      medical_history_summary,
-      Users!inner (
-        username,
-        full_name,
-        phone_number,
-        avatar_url,
-        status,
-        role,
-        is_minor,
-        dob,
-        gender,
-        address
-      )
-    `,
-      { count: "exact" },
-    )
+    .select(PATIENT_SELECT_QUERY, { count: "exact" })
     .order("patient_id", { ascending: false });
 
   // Keyword search (Users.full_name + Users.phone_number)
@@ -239,24 +206,7 @@ export const updatePatient = async (patientId, payload) => {
   // 4. Fetch updated data
   const { data: fullData, error: fetchError } = await supabase
     .from("Patients")
-    .select(
-      `
-    patient_id,
-    allergies,
-    medical_history_summary,
-    Users!inner (
-      username,
-      full_name,
-      phone_number,
-      avatar_url,
-      status,
-      is_minor,
-      dob,
-      gender,
-      address
-    )
-  `,
-    )
+    .select(PATIENT_SELECT_QUERY)
     .eq("patient_id", patientId)
     .single();
 
