@@ -55,7 +55,8 @@ export const getDoctorById = async (doctorId) => {
     ),
     Rooms (
         room_id,
-        room_number
+        room_number,
+        room_status
     ),
     Departments (
         department_id,
