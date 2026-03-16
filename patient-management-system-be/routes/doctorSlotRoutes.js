@@ -1,9 +1,8 @@
-import express from "express";
+import express from 'express';
 import { getListDoctorSlots } from "../controllers/doctorSlotController.js";
 import { getAvailableDoctorSlotsByDoctorIdAndDate } from "../controllers/doctorSlotController.js";
 import { createDoctorSlot } from "../controllers/doctorSlotController.js";
 import { getDoctorSlotById } from "../controllers/doctorSlotController.js";
-import express from 'express';
 import {
     getAllSlots,
     getSlotById,

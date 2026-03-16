@@ -73,18 +73,3 @@ export const deletePatient = asyncHandler(async (req, res) => {
     message: "Patient deleted successfully",
   });
 });
-
-export const getPatientById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  if (!id) {
-    throw new AppError("Patient ID is required", 400);
-  }
-
-  const patient = await patientService.getPatientById(id);
-
-  res.status(200).json({
-    success: true,
-    data: patient,
-  });
-});
