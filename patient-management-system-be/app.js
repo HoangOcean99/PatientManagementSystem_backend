@@ -19,12 +19,10 @@ import serviceRoutes from './routes/ClinicServicesRoutes.js';
 import systemConfigRoutes from './routes/systemConfigRoutes.js';
 import doctorAssignmentRouter from './routes/doctorAssignmentRoutes.js';
 import underMyCareRouter from './routes/underMyCareRoutes.js';
-
 import roomRouter from './routes/roomRoutes.js';
 import doctorSlotRouter from './routes/doctorSlotRoutes.js';
 import departmentRouter from './routes/departmentRoutes.js';
 import clinicServicesRouter from './routes/clinicRoutes.js';
-import userRouter from './routes/userRoutes.js';
 import receptionistRouter from './routes/receptionistRoutes.js';
 const app = express();
 

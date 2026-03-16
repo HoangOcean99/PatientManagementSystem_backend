@@ -7,10 +7,6 @@ import { updateDepartment } from "../controllers/departmentsController.js";
 import { deleteDepartment } from "../controllers/departmentsController.js";
 import {
     getAllDepartments,
-    getDepartmentById,
-    createDepartment,
-    updateDepartment,
-    deleteDepartment,
     // getListServicesByDepartment,
     // getListDepartments
 } from '../controllers/departmentController.js';
