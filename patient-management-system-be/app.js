@@ -47,7 +47,7 @@ app.use('/appointment', appointmentRouter);
 app.use("/users", userRouter);
 app.use('/medical-record', medicalRecordRouter);
 app.use('/lab-orders', labOrderRouter);
-app.use('/department', departmentRoutes);
+app.use('/departments', departmentRoutes);
 app.use('/clinic-service', serviceRoutes);
 app.use('/system-config', systemConfigRoutes);
 app.use('/doctor-assignments', doctorAssignmentRouter);
