@@ -73,6 +73,27 @@ export const getPatientList = async ({
     },
   };
 };
+
+export const getPatientById = async (patientId) => {
+  const { data, error } = await supabase
+    .from("Patients")
+    .select(`
+      *,
+      Users (*)
+    `)
+    .eq("patient_id", patientId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      throw new AppError("Patient not found", 404);
+    }
+    throw new AppError(error.message, 500);
+  }
+
+  return data;
+};
+
 export const updatePatient = async (patientId, payload) => {
   // 1. Check patient exists
   const { data: existing, error: findError } = await supabase

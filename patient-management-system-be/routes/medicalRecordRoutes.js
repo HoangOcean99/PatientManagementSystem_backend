@@ -11,8 +11,8 @@ import {
 const router = express.Router();
 
 // 1. Action APIs
-router.post('/start/:appointmentId', startExamination);       // Bắt đầu khám (tạo record)
-router.post('/complete/:recordId', completeExamination); // Hoàn thành khám (khoá record)
+router.post('/start', startExamination);       // Bắt đầu khám (tạo record)
+router.post('/complete', completeExamination); // Hoàn thành khám (khoá record)
 
 // 2. Querying APIs
 router.get('/detail/:recordId', getMedicalRecordById);

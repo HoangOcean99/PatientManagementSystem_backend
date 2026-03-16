@@ -1,4 +1,5 @@
 import * as doctorService from '../services/doctorService.js';
+import * as patientService from '../services/patientService.js';
 import asyncHandler from '../utils/async-handler.js';
 import { AppError } from '../utils/app-error.js';
 
@@ -94,5 +95,20 @@ export const getAppointmentsByDoctorId = asyncHandler(async (req, res, next) => 
         status: 'success',
         results: appointments.length,
         data: appointments
+    });
+});
+
+export const getPatientById = asyncHandler(async (req, res, next) => {
+    const { patientId } = req.params;
+
+    if (!patientId) {
+        return next(new AppError('Patient ID is required', 400));
+    }
+
+    const patient = await patientService.getPatientById(patientId);
+
+    res.status(200).json({
+        status: 'success',
+        data: patient
     });
 });

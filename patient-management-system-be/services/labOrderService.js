@@ -16,16 +16,16 @@ export const getAllLabOrders = async (query = {}) => {
             *,
             MedicalRecords (
                 record_id,
-                Patients (
-                    patient_id,
-                    Users (full_name, phone_number,dob,gender)
-                ),
-                Doctors (
-                    Users (full_name)
-                ),
                 Appointments (
+                    patient_id,
                     appointment_id,
-                    DoctorSlots (slot_date)
+                    DoctorSlots (slot_date),
+                    Doctors (
+                        Users (full_name)
+                    ),
+                    Patients (
+                        Users (full_name, phone_number, dob, gender)
+                    )
                 )
             )
         `, { count: 'exact' })
@@ -41,7 +41,7 @@ export const getAllLabOrders = async (query = {}) => {
     }
 
     if (patient_id) {
-        qb = qb.eq('MedicalRecords.Patients.patient_id', patient_id);
+        qb = qb.eq('MedicalRecords.Appointments.patient_id', patient_id);
     }
 
     const { data, error, count } = await qb;
@@ -65,7 +65,7 @@ export const getAllLabOrders = async (query = {}) => {
 export const createLabOrders = async (recordId, doctorId, labOrders) => {
     const { data: record, error: recordError } = await supabase
         .from('MedicalRecords')
-        .select('*, Appointments(status, doctor_id)')
+        .select('*, Appointments!appointment_id(status, doctor_id)')
         .eq('record_id', recordId)
         .single();
 
@@ -117,21 +117,22 @@ export const getLabOrderById = async (labOrderId) => {
             *,
             MedicalRecords (
                 record_id,
-                doctor_id,
                 symptoms,
                 diagnosis,
-                Patients (
-                    patient_id,
-                    allergies,
-                    Users (full_name, phone_number,dob,gender)
-                ),
-                Doctors (
-                    Users (full_name)
-                ),
                 Appointments (
+                    patient_id,
+                    doctor_id,
                     appointment_id,
                     status,
-                    DoctorSlots (slot_date, start_time)
+                    DoctorSlots (slot_date, start_time),
+                    Doctors (
+                        Users (full_name)
+                    ),
+                    Patients (
+                        patient_id,
+                        allergies,
+                        Users (full_name, phone_number, dob, gender)
+                    )
                 )
             )
         `)
