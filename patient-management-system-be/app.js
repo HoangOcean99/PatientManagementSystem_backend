@@ -13,7 +13,6 @@ import userRouter from "./routes/userRoutes.js";
 import cors from 'cors';
 import medicalRecordRouter from './routes/medicalRecordRoutes.js';
 import labOrderRouter from './routes/labOrderRoutes.js';
-
 import appointmentRouter from './routes/appointmentRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import serviceRoutes from './routes/ClinicServicesRoutes.js';

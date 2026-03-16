@@ -62,7 +62,8 @@ export const getDoctorById = async (doctorId) => {
     ),
     Rooms (
         room_id,
-        room_number
+        room_number,
+        room_status
     ),
     Departments (
         department_id,
@@ -260,13 +261,13 @@ export const getDoctorAppointmentsByDoctorId = async (
             ),
             Patients (
                 patient_id,
-                dob,
-                gender,
-                address,
                 Users (
                     full_name,
                     phone_number,
-                    avatar_url
+                    avatar_url,
+                    dob,
+                    gender,
+                    address
                 )
             ),
             ClinicServices (

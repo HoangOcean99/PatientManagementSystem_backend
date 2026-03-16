@@ -3,15 +3,17 @@ import asyncHandler from '../utils/async-handler.js';
 import { AppError } from '../utils/app-error.js';
 
 export const startExamination = asyncHandler(async (req, res, next) => {
-    // Trong thực tế doctor_id sẽ lấy từ token (req.user.id), 
-    // ở đây dùng body tạm thời cho việc test API
-    const { appointment_id, doctor_id, patient_id } = req.params;
+    const { appointment_id, doctor_id } = req.body;
     
-    if (!appointment_id || !doctor_id || !patient_id) {
-        return next(new AppError('Missing appointment_id, doctor_id, or patient_id', 400));
+    if (!appointment_id) {
+        return next(new AppError('Appointment ID is required', 400));
     }
 
-    const newRecord = await medicalRecordService.startExamination(appointment_id, doctor_id, patient_id);
+    if (!doctor_id) {
+        return next(new AppError('Doctor ID is required', 400));
+    }
+
+    const newRecord = await medicalRecordService.startExamination(appointment_id, doctor_id);
 
     res.status(200).json({
         status: 'success',
@@ -42,10 +44,9 @@ export const updateMedicalRecord = asyncHandler(async (req, res, next) => {
 });
 
 export const completeExamination = asyncHandler(async (req, res, next) => {
-    const { recordId } = req.params;
-    const { doctor_id } = req.body; // mock user token
+    const { record_id, doctor_id } = req.body;
 
-    if (!recordId) {
+    if (!record_id) {
         return next(new AppError('Record ID is required', 400));
     }
     
@@ -53,7 +54,7 @@ export const completeExamination = asyncHandler(async (req, res, next) => {
         return next(new AppError('Doctor ID is required for authorization', 400));
     }
 
-    const result = await medicalRecordService.completeExamination(recordId, doctor_id);
+    const result = await medicalRecordService.completeExamination(record_id, doctor_id);
 
     res.status(200).json({
         status: 'success',

@@ -1,10 +1,12 @@
-import express from "express";
-import { getListActiveRooms, getListInactiveRooms, getListRooms } from "../controllers/roomController.js";
+import express from 'express';
+import {
+    getListActiveRooms,
+    updateStatusByDoctor
+} from '../controllers/roomController.js';
 
-const roomRouter = express.Router();
+const router = express.Router();
 
-roomRouter.get('/getListActive', getListActiveRooms);
-roomRouter.get('/getListInactive', getListInactiveRooms);
-roomRouter.get('/getList', getListRooms);
+router.get('/getListActive', getListActiveRooms);
+router.patch('/update-status-by-doctor', updateStatusByDoctor);
 
-export default roomRouter;
+export default router;

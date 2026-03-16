@@ -127,7 +127,7 @@ const syncLabOrders = async (recordId, labOrders) => {
 // ============================================================
 // 1. Gọi khi Bác sĩ ấn "Bắt đầu khám"
 // ============================================================
-export const startExamination = async (appointmentId, doctorId, patientId) => {
+export const startExamination = async (appointmentId, doctorId) => {
     const { data: appointment, error: apptError } = await supabase
         .from('Appointments')
         .select('*')
@@ -142,12 +142,19 @@ export const startExamination = async (appointmentId, doctorId, patientId) => {
         throw new AppError('You are not assigned to this appointment', 403);
     }
 
-    if (appointment.patient_id !== patientId) {
-        throw new AppError('Patient ID does not match the appointment', 400);
+    if (appointment.status !== 'assigned') {
+        throw new AppError(`Cannot start examination. Current status is ${appointment.status}, expected 'assigned'`, 400);
     }
 
-    if (appointment.status !== 'checked_in') {
-        throw new AppError(`Cannot start examination. Current status is ${appointment.status}, expected 'checked_in'`, 400);
+    // Kiểm tra đã có MedicalRecord cho appointment này chưa
+    const { data: existingRecord } = await supabase
+        .from('MedicalRecords')
+        .select('record_id')
+        .eq('appointment_id', appointmentId)
+        .single();
+
+    if (existingRecord) {
+        throw new AppError('A medical record already exists for this appointment', 409);
     }
 
     const { error: updateApptError } = await supabase
@@ -161,8 +168,6 @@ export const startExamination = async (appointmentId, doctorId, patientId) => {
         .from('MedicalRecords')
         .insert([{
             appointment_id: appointmentId,
-            doctor_id: doctorId,
-            patient_id: patientId,
             diagnosis: ''
         }])
         .select()
@@ -181,16 +186,16 @@ export const getMedicalRecordById = async (recordId) => {
         .from('MedicalRecords')
         .select(`
             *,
-            Patients (
-                Users (full_name, phone_number)
-            ),
-            Doctors (
-                specialization,
-                Users (full_name)
-            ),
             Appointments (
                 status,
-                DoctorSlots (slot_date, start_time)
+                DoctorSlots (slot_date, start_time),
+                Doctors (
+                    specialization,
+                    Users (full_name)
+                ),
+                Patients (
+                    Users (full_name, phone_number)
+                )
             ),
             Prescriptions (*),
             LabOrders (*)
@@ -222,17 +227,22 @@ export const getMedicalRecordsByPatient = async (patientId) => {
         .from('MedicalRecords')
         .select(`
             *,
-            Doctors (
-                Users (full_name)
-            ),
-            Appointments (
+            Appointments!inner (
+                patient_id,
                 status,
-                DoctorSlots (slot_date, start_time)
+                DoctorSlots (slot_date, start_time),
+                Doctors (
+                    Users (full_name)
+                ),
+                Patients (
+                    *,
+                    Users (*)
+                )
             ),
             Prescriptions (*),
             LabOrders (*)
         `)
-        .eq('patient_id', patientId)
+        .eq('Appointments.patient_id', patientId)
         .order('created_at', { ascending: false });
 
     if (error) throw new AppError(error.message, 500);
@@ -246,7 +256,7 @@ export const updateMedicalRecord = async (recordId, updateData, doctorId) => {
     // Kiểm tra Record và Appointment đi kèm
     const { data: record, error: recordError } = await supabase
         .from('MedicalRecords')
-        .select('*, Appointments(status, doctor_id)')
+        .select('*, Appointments!appointment_id(status, doctor_id)')
         .eq('record_id', recordId)
         .single();
 
@@ -254,6 +264,7 @@ export const updateMedicalRecord = async (recordId, updateData, doctorId) => {
         throw new AppError('Medical record not found', 404);
     }
 
+    // Kiểm tra quyền: lấy doctor_id từ Appointments
     if (record.Appointments.doctor_id !== doctorId) {
         throw new AppError('You do not have permission to edit this record', 403);
     }
@@ -291,7 +302,7 @@ export const updateMedicalRecord = async (recordId, updateData, doctorId) => {
 export const completeExamination = async (recordId, doctorId) => {
     const { data: record, error: recordError } = await supabase
         .from('MedicalRecords')
-        .select('*, Appointments(status, doctor_id)')
+        .select('*, Appointments!appointment_id(status, doctor_id)')
         .eq('record_id', recordId)
         .single();
 
@@ -299,6 +310,7 @@ export const completeExamination = async (recordId, doctorId) => {
         throw new AppError('Medical record not found', 404);
     }
 
+    // Kiểm tra quyền: lấy doctor_id từ Appointments
     if (record.Appointments.doctor_id !== doctorId) {
         throw new AppError('You do not have permission to complete this examination', 403);
     }
