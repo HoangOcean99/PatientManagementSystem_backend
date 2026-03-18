@@ -25,6 +25,7 @@ import roomRouter from './routes/roomRoutes.js';
 import doctorSlotRouter from './routes/doctorSlotRoutes.js'; 
 import clinicServicesRouter from './routes/clinicRoutes.js';
 import invoiceRouter from './routes/invoiceRoutes.js';
+import accountantRouter from './routes/accountantRoutes.js';
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/room', roomRouter);
 app.use('/doctor-slots', doctorSlotRouter);
 app.use('/clinic-services', clinicServicesRouter);
 app.use('/invoices', invoiceRouter);
+app.use('/accountant', accountantRouter);
 
 
 app.use(errorHandler);
