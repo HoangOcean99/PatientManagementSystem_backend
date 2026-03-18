@@ -19,6 +19,7 @@ import departmentRoutes from './routes/departmentRoutes.js';
 import serviceRoutes from './routes/ClinicServicesRoutes.js';
 import systemConfigRoutes from './routes/systemConfigRoutes.js';
 import doctorSlotRoutes from './routes/doctorSlotRoutes.js';
+import labServiceRoutes from './routes/labServiceRoutes.js';
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use('/appointment', appointmentRouter);
 app.use("/users", userRouter);
 app.use('/medical-record', medicalRecordRouter);
 app.use('/lab-orders', labOrderRouter);
+app.use('/lab-services', labServiceRoutes);
 app.use('/department', departmentRoutes);
 app.use('/clinic-service', serviceRoutes);
 app.use('/system-config', systemConfigRoutes);
