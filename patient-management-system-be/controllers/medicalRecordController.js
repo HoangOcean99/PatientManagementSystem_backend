@@ -98,22 +98,34 @@ export const getMedicalRecordByAppointment = asyncHandler(async (req, res, next)
 });
 
 export const getMedicalRecordsByPatient = asyncHandler(async (req, res, next) => {
-    const { patientId } = req.params;
+    try {
+        const { patientId } = req.params;
 
-    if (!patientId) {
-        return next(new AppError('Patient ID is required', 400));
+        if (!patientId) {
+            return next(new AppError('Patient ID is required', 400));
+        }
+
+        if (!req.user || !req.user.id) {
+            return res.status(500).json({ message: "req.user.id is missing. Make sure requireAuth middleware is applied to the route." });
+        }
+
+        const hasAccess = await checkDependentAccess(req.user.id, patientId);
+        if (!hasAccess) {
+            return next(new AppError('You do not have permission to access these records', 403));
+        }
+
+        const records = await medicalRecordService.getMedicalRecordsByPatient(patientId);
+
+        res.status(200).json({
+            status: 'success',
+            results: records?.length || 0,
+            data: records
+        });
+    } catch (err) {
+        console.error("GET_MEDICAL_RECORDS_ERR:", err);
+        return res.status(500).json({ 
+            message: "DEBUG_500: " + err.message, 
+            stack: err.stack 
+        });
     }
-
-    // const hasAccess = await checkDependentAccess(req.user.id, patientId);
-    // if (!hasAccess) {
-    //     return next(new AppError('You do not have permission to access these records', 403));
-    // }
-
-    const records = await medicalRecordService.getMedicalRecordsByPatient(patientId);
-
-    res.status(200).json({
-        status: 'success',
-        results: records.length,
-        data: records
-    });
 });
