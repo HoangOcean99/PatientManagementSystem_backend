@@ -9,6 +9,16 @@ export const getListAppointments = asyncHandler(async (req, res) => {
   return res.json(response);
 });
 
+export const getListAppointmentsByCurrentUserId = asyncHandler(async (req, res) => {
+  const { date, status } = req.query;
+  const currentUserId = req.params.currentUserId;
+  const response = await appointmentService.getListAppointmentsByCurrentUserId(currentUserId, {
+    date,
+    status,
+  });
+  return res.json(response);
+});
+
 export const getListAppointmentsByStatus = asyncHandler(async (req, res) => {
   const { status } = req.params;
   const response = await appointmentService.getListAppointmentsByStatus(status);
@@ -19,7 +29,7 @@ export const getListAppointmentsByStatus = asyncHandler(async (req, res) => {
 export const createAppointmentForPatient = async (req, res, next) => {
   try {
     // Bệnh nhân chỉ gửi những thông tin này lên
-    const { patient_id, doctor_id, service_id, slot_id, role } = req.body ;
+    const { patient_id, doctor_id, service_id, slot_id, role } = req.body;
 
     // Không cần gọi createDoctorSlot nữa!
     const newAppointment = await appointmentService.createAppointment(
@@ -43,7 +53,7 @@ export const createAppointmentForPatient = async (req, res, next) => {
 export const cancelAppointment = asyncHandler(async (req, res) => {
   const { appointment_id } = req.params;
 
-  await appointmentService.cancelAppointment(appointment_id, currentUser);
+  await appointmentService.cancelAppointment(appointment_id);
   return res.status(200).json({
     message: "Hủy lịch hẹn thành công"
   });

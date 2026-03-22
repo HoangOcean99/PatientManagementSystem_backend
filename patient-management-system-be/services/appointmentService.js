@@ -49,6 +49,43 @@ export const getListAppointments = async (date) => {
     a.DoctorSlots.start_time.localeCompare(b.DoctorSlots.start_time)
   );
 };
+
+export const getListAppointmentsByCurrentUserId = async (currentUserId, { date, status } = {}) => {
+  let query = supabase.from('Appointments').select(`
+        appointment_id,
+        status,
+        currentSymptom,
+        total_price,
+        deposit_required,
+        deposit_paid,
+        created_at,
+        DoctorSlots!inner ( slot_id, start_time, end_time, slot_date),
+        Patients!inner ( patient_id, Users!inner ( full_name, email )),
+        Doctors!inner ( doctor_id, Users!inner ( full_name, email ) ),
+        ClinicServices!inner ( service_id, name, Departments!inner ( department_id, name ) )
+      `);
+
+  if (date && isValidDate(date)) {
+    query = query.eq('DoctorSlots.slot_date', date);
+  }
+  if (status) {
+    query = query.eq('status', status);
+  }
+  query = query.eq('Patients.patient_id', currentUserId);
+  const { data: appointments, error } = await query;
+  if (error) {
+    throw new Error(`Lỗi khi lấy danh sách lịch: ${error.message}`);
+  }
+  // Nếu appointments là null hoặc mảng rỗng thì trả về mảng rỗng luôn, không sort
+  if (!appointments || appointments.length === 0) {
+    return [];
+  }
+
+  return appointments.sort((a, b) =>
+    a.DoctorSlots.start_time.localeCompare(b.DoctorSlots.start_time)
+  );
+};
+
 export const getListAppointmentsByStatus = async (status) => {
   const { data: appointment, error } = await supabase
     .from('Appointments ')
@@ -294,7 +331,7 @@ export const rescheduleAppointment = async (appointment_id, new_slot_id, updates
   }
 }
 
-export const cancelAppointment = async (appointment_id, currentUser) => {
+export const cancelAppointment = async (appointment_id) => {
   // Lấy thông tin lịch hiện tại
   const { data: appt, error: fetchError } = await supabase
     .from('Appointments')

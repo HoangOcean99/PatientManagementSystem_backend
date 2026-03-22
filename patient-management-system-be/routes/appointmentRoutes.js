@@ -9,6 +9,7 @@ import { getListAppointmentsByAppointmentId } from "../controllers/appointmentCo
 import { getListAppointmentsByStatus } from "../controllers/appointmentController.js";
 import { updateAppointmentStatus } from "../controllers/appointmentController.js";
 import { getTodayCheckedInAppointments } from "../controllers/appointmentController.js";
+import { getListAppointmentsByCurrentUserId } from "../controllers/appointmentController.js";
 const appointmentRouter = express.Router();
 
 appointmentRouter.get('/getList', getListAppointments);
@@ -21,4 +22,5 @@ appointmentRouter.put('/approve/:appointment_id', approveAppointment);
 appointmentRouter.get('/pending', getListPendingAppointment);
 appointmentRouter.patch('/updateStatus/:appointment_id', updateAppointmentStatus);
 appointmentRouter.get('/todayCheckedIn', getTodayCheckedInAppointments);
+appointmentRouter.get('/getListByCurrentUserId/:currentUserId', getListAppointmentsByCurrentUserId);
 export default appointmentRouter;  

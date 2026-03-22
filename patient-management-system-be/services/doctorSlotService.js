@@ -1,7 +1,7 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
 import * as doctorService from "../services/doctorService.js";
-import * as appointmentService from "../services/appointmentService.js";
+
 
 export const getListDoctorSlots = async () => {
   const { data, error } = await supabase.from('DoctorSlots').select('*');
@@ -89,6 +89,51 @@ export const getAvailableDoctorSlotsInDay = async (doctorId, date) => {
   return data;
 }
 
+// Lấy các slot trống theo đúng bác sĩ và ngày chỉ định
+// - Chỉ lấy slot chưa book (is_booked = false)
+// - Loại bỏ slot đã trôi giờ (so với thời điểm hiện tại)
+// - Loại bỏ slot có Appointment đang pending / upcoming
+export const getAvailableDoctorSlotsByDoctorIdAndExactDate = async (doctor_id, date) => {
+  const { data: slots, error } = await supabase
+    .from('DoctorSlots')
+    .select('slot_id, slot_date, start_time, end_time, Appointments(appointment_id, status), Users (full_name)')
+    .eq('doctor_id', doctor_id)
+    .eq('slot_date', date)
+    .eq('is_booked', false)
+    .order('start_time', { ascending: true });
+
+  if (error) throw new AppError(error.message, 500);
+  if (!slots || slots.length === 0) return [];
+
+  const now = new Date();
+
+  const availableSlots = slots.filter(slot => {
+    // Bỏ các slot đã trôi giờ trong ngày hiện tại
+    const slotDateTime = new Date(`${slot.slot_date}T${slot.start_time}`);
+    if (slotDateTime < now) return false;
+
+    // Chuẩn hóa mảng Appointments
+    const appointments = Array.isArray(slot.Appointments)
+      ? slot.Appointments
+      : (slot.Appointments ? [slot.Appointments] : []);
+
+    // Nếu có appointment pending hoặc upcoming thì coi như slot không còn trống
+    const hasActiveAppointment = appointments.some(
+      app => app && (app.status === 'pending' || app.status === 'upcoming')
+    );
+
+    return !hasActiveAppointment;
+  });
+
+  // Trả về danh sách slot phẳng để FE dễ render
+  return availableSlots.map(slot => ({
+    slot_id: slot.slot_id,
+    slot_date: slot.slot_date,
+    start_time: slot.start_time?.substring(0, 5) || slot.start_time,
+    end_time: slot.end_time?.substring(0, 5) || slot.end_time
+  }));
+};
+
 export const createDoctorSlot = async (doctor_id, slot_date, start_time, end_time) => {
   const doctor = await doctorService.getDoctorById(doctor_id);
   if (!doctor) throw new AppError("Bác sĩ không tồn tại", 404);
@@ -100,7 +145,7 @@ export const createDoctorSlot = async (doctor_id, slot_date, start_time, end_tim
   return newDoctorSlot;
 }
 
-export const getAvailableDoctorSlotsByDate = async (department_id, date) => {
+export const getAvailableDoctorSlots = async (department_id) => {
   const { data: slots, error } = await supabase
     .from('DoctorSlots')
     .select(`
@@ -116,12 +161,11 @@ export const getAvailableDoctorSlotsByDate = async (department_id, date) => {
         Users (full_name)
       )
     `)
-    .eq('slot_date', date)
     .eq('is_booked', false)
-    .eq('Doctors.department_id', department_id)
+    .eq('Doctors.department_id', department_id.department_id)
     .order('start_time', { ascending: true });
 
-  if (error) throw new AppError(error.message, 500);
+  if (error) { console.log(error); throw new AppError(error.message, 500); }
   if (!slots || slots.length === 0) return [];
 
   const now = new Date();
@@ -151,4 +195,5 @@ export const getAvailableDoctorSlotsByDate = async (department_id, date) => {
     doctor_id: slot.doctor_id,
     Doctors: slot.Doctors
   }));
-} 
+}
+

@@ -16,7 +16,6 @@ export const getDoctorSlotById = async (req, res) => {
 export const getAvailableDoctorSlotsByDoctorIdAndDate = async (req, res, next) => {
     try {
         const { doctor_id, start_date, end_date } = req.body;
-        console.log(doctor_id, start_date, end_date);
 
         // Kiểm tra xem dữ liệu có đầy đủ không
         if (!doctor_id || !start_date || !end_date) {
@@ -36,6 +35,30 @@ export const getAvailableDoctorSlotsByDoctorIdAndDate = async (req, res, next) =
         res.status(500).json({ message: "Đã có lỗi xảy ra", error: error.message });
     }
 }
+
+// Case 3: chọn đúng bác sĩ + đúng 1 ngày cụ thể
+export const getAvailableDoctorSlotsByDoctorIdAndExactDate = async (req, res, next) => {
+    try {
+        const { doctor_id, date } = req.body;
+
+        if (!doctor_id || !date) {
+            return res.status(400).json({ message: "Thiếu thông tin doctor_id hoặc date!" });
+        }
+
+        const availableDoctorSlots = await doctorSlotService.getAvailableDoctorSlotsByDoctorIdAndExactDate(
+            doctor_id,
+            date
+        );
+
+        res.status(200).json({
+            success: true,
+            data: availableDoctorSlots,
+        });
+    } catch (error) {
+        console.error("Lỗi Controller (ExactDate):", error);
+        res.status(500).json({ message: "Đã có lỗi xảy ra", error: error.message });
+    }
+};
 
 export const createDoctorSlot = async (req, res, next) => {
     try {
@@ -57,18 +80,17 @@ export const createDoctorSlot = async (req, res, next) => {
     }
 }
 
- export const getAvailableDoctorSlotsByDate = async (req, res, next) => {
+export const getAvailableDoctorSlots = async (req, res, next) => {
     try {
-        const { department_id, date } = req.body;
-        console.log("Dữ liệu nhận được:", { department_id, date });
-        if (!department_id || !date) {
-            return res.status(400).json({ message: "Thiếu thông tin department_id hoặc date!" });
+        const department_id = req.body;
+        console.log("Dữ liệu nhận được:", { department_id });
+        if (!department_id) {
+            return res.status(400).json({ message: "Thiếu thông tin department_id" });
         }
-        const availableDoctorSlots = await doctorSlotService.getAvailableDoctorSlotsByDate(department_id, date);
+        const availableDoctorSlots = await doctorSlotService.getAvailableDoctorSlots(department_id);
         res.status(200).json(availableDoctorSlots);
     } catch (error) {
-        next(error);    
+        next(error);
     }
- }
+}
 
-         
