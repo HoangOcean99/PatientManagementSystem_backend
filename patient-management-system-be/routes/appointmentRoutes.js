@@ -10,12 +10,14 @@ import { getListAppointmentsByStatus } from "../controllers/appointmentControlle
 import { updateAppointmentStatus } from "../controllers/appointmentController.js";
 import { getTodayCheckedInAppointments } from "../controllers/appointmentController.js";
 import { getListAppointmentsByCurrentUserId } from "../controllers/appointmentController.js";
+import { requireAuth } from "../middlewares/auth.js";
+
 const appointmentRouter = express.Router();
 
 appointmentRouter.get('/getList', getListAppointments);
 appointmentRouter.get('/getList/:appointment_id', getListAppointmentsByAppointmentId);
 appointmentRouter.get('/getListByStatus/:status', getListAppointmentsByStatus);
-appointmentRouter.post('/create', createAppointmentForPatient);
+appointmentRouter.post('/create', requireAuth, createAppointmentForPatient);
 appointmentRouter.post('/reschedule/:appointment_id', rescheduleAppointment);
 appointmentRouter.patch('/cancel/:appointment_id', cancelAppointment);
 appointmentRouter.put('/approve/:appointment_id', approveAppointment);

@@ -182,7 +182,7 @@ export const createAppointment = async (patient_id, doctor_id, service_id, slot_
   // 3. Tính toán tổng tiền và tiền cọc dựa trên giá dịch vụ
   const total_price = service.price;
   // Nếu DB chưa có cột deposit_required thì mặc định = 0
-  const deposit_required = service.deposit_required ?? 0;
+  const deposit_required = service.price * 0.3;
   // 4. Tạo bản ghi Appointment
   const { data: newAppointment, error: createError } = await supabase
     .from('Appointments')
@@ -194,7 +194,8 @@ export const createAppointment = async (patient_id, doctor_id, service_id, slot_
       status: "pending",
       currentSymptom: current_symptom,
       total_price: total_price,
-      deposit_required: deposit_required
+      deposit_required: deposit_required,
+      deposit_paid: 0,
     })
     .select()
     .single();

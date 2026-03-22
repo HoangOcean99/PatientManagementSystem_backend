@@ -7,6 +7,7 @@ import baseRouter from './routes/baseRoutes.js';
 import authRouter from './routes/authRoutes.js';
 import gmailRouter from './routes/gmailRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import { requireAuth } from './middlewares/auth.js';
 import doctorRouter from './routes/doctorRoutes.js';
 import patientRouter from "./routes/patientRoutes.js";
 import userRouter from "./routes/userRoutes.js";
@@ -26,6 +27,7 @@ import receptionistRouter from './routes/receptionistRoutes.js';
 import invoiceRouter from './routes/invoiceRoutes.js';
 import accountantRouter from './routes/accountantRoutes.js';
 import labServiceRoutes from './routes/labServiceRoutes.js';
+import dashboardRouter from './routes/dashboardRoutes.js';
 
 const app = express();
 
@@ -40,9 +42,12 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use('/base', baseRouter);
-app.use('/doctor', doctorRouter);
 app.use('/auth', authRouter);
 app.use('/gmail', gmailRouter);
+
+app.use(requireAuth);
+
+app.use('/doctor', doctorRouter);
 app.use("/patients", patientRouter);
 app.use('/appointment', appointmentRouter);
 app.use("/users", userRouter);
@@ -60,7 +65,7 @@ app.use('/doctor-slots', doctorSlotRouter);
 app.use('/clinic-services', clinicServicesRouter);
 app.use('/invoices', invoiceRouter);
 app.use('/accountant', accountantRouter);
-
+app.use('/dashboard', dashboardRouter);
 
 app.use(errorHandler);
 //console.table(listEndpoints(app));

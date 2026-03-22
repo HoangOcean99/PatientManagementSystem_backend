@@ -27,18 +27,14 @@ export const getListAppointmentsByStatus = asyncHandler(async (req, res) => {
   return res.json(response);
 });
 
-// Trong controller/appointmentController.js
 export const createAppointmentForPatient = async (req, res, next) => {
   try {
-    // Bệnh nhân chỉ gửi những thông tin này lên
     const { patient_id, doctor_id, service_id, slot_id, role } = req.body;
-
     const hasAccess = await checkDependentAccess(req.user.id, patient_id);
     if (!hasAccess) {
-        return next(new AppError('You do not have permission to book for this patient', 403));
+      return next(new AppError('You do not have permission to book for this patient', 403));
     }
 
-    // Không cần gọi createDoctorSlot nữa!
     const newAppointment = await appointmentService.createAppointment(
       patient_id,
       doctor_id,

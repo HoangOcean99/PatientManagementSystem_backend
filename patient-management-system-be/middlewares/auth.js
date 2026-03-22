@@ -2,6 +2,9 @@ import { supabase } from "../supabaseClient.js";
 
 // checking token function và security of api 
 export const requireAuth = async (req, res, next) => {
+  // Tránh việc check token 2 lần nếu route con lỡ gọi đè thêm requireAuth
+  if (req.user) return next();
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith('Bearer ')) {
