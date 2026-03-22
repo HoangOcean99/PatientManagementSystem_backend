@@ -4,6 +4,7 @@ import {
   getPatient,
   getPatientById,
   updatePatient,
+  updatePatientInfo,
   deletePatient,
 } from "../controllers/patientController.js";
 import { upload } from "../middlewares/uploadMiddleware.js";
@@ -25,6 +26,7 @@ patientRouter.get("/:id", getPatientById);
 // Update Patient
 // patientRouter.put("/:id", auth, checkRole(["admin"]), updatePatient);
 patientRouter.put("/update", upload.single("avatar"), updatePatient);
+patientRouter.put("/update-info", updatePatientInfo);
 
 // Delete Patient
 patientRouter.delete("/:id", deletePatient);

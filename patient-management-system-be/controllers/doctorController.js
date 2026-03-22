@@ -8,7 +8,7 @@ export const getAllDoctors = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success',
-        results: doctors.length,
+        // results: doctors.length,
         data: doctors
     });
 });
@@ -49,6 +49,21 @@ export const updateDoctor = asyncHandler(async (req, res, next) => {
     const avatarFile = req.file || null;
 
     const updatedDoctor = await doctorService.updateDoctor(updateData, avatarFile);
+
+    if (!updatedDoctor) {
+        return next(new AppError('Doctor not found or update failed', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: updatedDoctor
+    });
+});
+
+export const updateDoctorInfo = asyncHandler(async (req, res, next) => {
+    const updateData = req.body;
+
+    const updatedDoctor = await doctorService.updateDoctorInfo(updateData);
 
     if (!updatedDoctor) {
         return next(new AppError('Doctor not found or update failed', 404));

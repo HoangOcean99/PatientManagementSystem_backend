@@ -9,7 +9,8 @@ import {
     remove,
     createDepartment,
     updateDepartment,
-    deleteDepartment
+    deleteDepartment,
+    getById
 } from "../controllers/departmentsController.js";
 
 const departmentRouter = express.Router();
@@ -21,7 +22,7 @@ departmentRouter.put('/updateDepartment/:id', updateDepartment);
 departmentRouter.delete('/deleteDepartment/:id', deleteDepartment);
 
 departmentRouter.get('/getList', getListDepartments);
-departmentRouter.get('/getById/:departmentId', getDepartmentById);
+departmentRouter.get('/getById/:id', getById);
 departmentRouter.get('/getListServicesByDepartment/:departmentId', getListServicesByDepartment);
 departmentRouter.post('/create', create);
 departmentRouter.put('/update/:departmentId', update);

@@ -68,13 +68,13 @@ export const getServiceById = async (req, res) => {
 
 export const createService = async (req, res) => {
     try {
-        const payload = req.body;
+        const data = req.body;
 
-        const data = await ClinicService.create(payload);
+        const response = await ClinicService.create(data);
         return res.status(201).json({
             success: true,
             message: 'Tạo dịch vụ thành công',
-            data
+            response
         });
     } catch (error) {
         return res.status(400).json({

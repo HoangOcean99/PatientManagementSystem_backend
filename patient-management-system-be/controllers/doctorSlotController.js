@@ -1,4 +1,6 @@
 import * as doctorSlotService from '../services/doctorSlotService.js';
+import * as doctorService from '../services/doctorService.js';
+
 import asyncHandler from '../utils/async-handler.js';
 import { AppError } from '../utils/app-error.js';
 
@@ -155,7 +157,6 @@ export const getDoctorSlotById = async (req, res) => {
 export const getAvailableDoctorSlotsByDoctorIdAndDate = async (req, res, next) => {
     try {
         const { doctor_id, start_date, end_date } = req.body;
-        console.log(doctor_id, start_date, end_date);
 
         // Kiểm tra xem dữ liệu có đầy đủ không
         if (!doctor_id || !start_date || !end_date) {
@@ -199,7 +200,6 @@ export const createDoctorSlot = async (req, res, next) => {
  export const getAvailableDoctorSlotsByDate = async (req, res, next) => {
     try {
         const { department_id, date } = req.body;
-        console.log("Dữ liệu nhận được:", { department_id, date });
         if (!department_id || !date) {
             return res.status(400).json({ message: "Thiếu thông tin department_id hoặc date!" });
         }

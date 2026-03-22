@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllDoctors, getDoctorById, searchDoctors, updateDoctor, getAppointmentsByDoctorId, createDoctorProfile, getDoctorByDepartmentId, getPatientById } from '../controllers/doctorController.js';
+import { getAllDoctors, getDoctorById, searchDoctors, updateDoctor, updateDoctorInfo, getAppointmentsByDoctorId, createDoctorProfile, getDoctorByDepartmentId, getPatientById } from '../controllers/doctorController.js';
 import { updateDoctorValidator, createDoctorProfileValidator } from '../middlewares/doctorValidator.js';
 import { upload } from '../middlewares/uploadMiddleware.js';
 import { createDoctor } from '../controllers/doctorController.js';
@@ -10,6 +10,7 @@ const doctorRouter = express.Router();
 
 doctorRouter.post('/setup/:doctorId', createDoctorProfileValidator, createDoctorProfile);
 doctorRouter.put('/update', updateDoctorValidator, upload.single("avatar"), updateDoctor);
+doctorRouter.put('/update-info', updateDoctorInfo);
 doctorRouter.get('/appointments/:doctorId', getAppointmentsByDoctorId);
 doctorRouter.get('/patient/:patientId', getPatientById);
 doctorRouter.get('/search', searchDoctors);

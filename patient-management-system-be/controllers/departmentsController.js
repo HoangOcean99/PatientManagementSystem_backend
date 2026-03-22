@@ -9,40 +9,40 @@ export const getListDepartments = asyncHandler(async (req, res) => {
 });
 
 export const getDepartmentById = asyncHandler(async (req, res) => {
-    const { departmentId } = req.params;
-    const department = await departmentsService.getDepartmentById(departmentId);
+    const { id } = req.params;
+    const department = await departmentsService.getDepartmentById(id);
     res.status(200).json(department);
 });
 
 export const getListServicesByDepartment = asyncHandler(async (req, res) => {
-    const { departmentId } = req.params;
-    const services = await departmentsService.getListServicesByDepartment(departmentId);
+    const { id } = req.params;
+    const services = await departmentsService.getListServicesByDepartment(id);
     res.status(200).json(services);
 });
 
 export const createDepartment = asyncHandler(async (req, res) => {
-    const { department } = req.body;
-    const newDepartment = await departmentsService.createDepartment(department);
+    const data = req.body;
+    const newDepartment = await departmentsService.createDepartment(data);
     res.status(200).json(newDepartment);
 });
 
 export const updateDepartment = asyncHandler(async (req, res) => {
-    const { departmentId } = req.params;
-    const { department } = req.body;
-    const updatedDepartment = await departmentsService.updateDepartment(departmentId, department);
+    const { id } = req.params;
+    const department = req.body;
+    const updatedDepartment = await departmentsService.updateDepartment(id, department);
     res.status(200).json(updatedDepartment);
 });
 
 export const deleteDepartment = asyncHandler(async (req, res) => {
-    const { departmentId } = req.params;
-    const deletedDepartment = await departmentsService.deleteDepartment(departmentId);
+    const { id } = req.params;
+    const deletedDepartment = await departmentsService.deleteDepartment(id);
     res.status(200).json(deletedDepartment);
 });
 
 export const getAllDepartments = async (req, res) => {
     try {
         const onlyActive = req.query.onlyActive === 'true';
-        const data = await DepartmentService.getAll(onlyActive);
+        const data = await departmentsService.getAll(onlyActive);
         return res.status(200).json({
             success: true,
             data
@@ -60,7 +60,7 @@ export const getAllDepartments = async (req, res) => {
 export const getById = async (req, res) => {
     try {
         const { id } = req.params;
-        const data = await DepartmentService.getById(id);
+        const data = await departmentsService.getById(id);
 
         if (!data) {
             return res.status(404).json({
@@ -87,7 +87,7 @@ export const create = async (req, res) => {
     try {
         const payload = req.body;
 
-        const data = await DepartmentService.create(payload);
+        const data = await departmentsService.create(payload);
 
         return res.status(201).json({
             success: true,
@@ -109,7 +109,7 @@ export const update = async (req, res) => {
         const { id } = req.params;
         const updates = req.body;
 
-        const data = await DepartmentService.update(id, updates);
+        const data = await departmentsService.update(id, updates);
 
         return res.status(200).json({
             success: true,
@@ -130,7 +130,7 @@ export const remove = async (req, res) => {
     try {
         const { id } = req.params;
 
-        await DepartmentService.remove(id);
+        await departmentsService.remove(id);
 
         return res.status(200).json({
             success: true,

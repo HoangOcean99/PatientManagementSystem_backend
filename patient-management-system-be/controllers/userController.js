@@ -89,6 +89,75 @@ export const updateUserProfile = async (req, res, next) => {
     next(error);
   }
 };
+export const getUsersByRole = asyncHandler(async (req, res) => {
+  const role = req.params.role;
+  const users = await userServices.getUsersByRole(role);
+
+  res.status(200).json({
+    success: true,
+    data: users.map((user) => ({
+      user_id: user.user_id,
+      full_name: user.full_name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      dob: user.dob,
+      gender: user.gender,
+      address: user.address,
+      phone_number: user.phone_number,
+      avatar_url: user.avatar_url
+    })),
+  });
+});
+
+export const getUserByIdAndRole = asyncHandler(async (req, res) => {
+  const { role, id } = req.params;
+
+  if (!id) throw new AppError("User ID is required", 400);
+
+  const user = await userServices.getUserByIdAndRole(id, role);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      user_id: user.user_id,
+      full_name: user.full_name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      dob: user.dob,
+      gender: user.gender,
+      address: user.address,
+      phone_number: user.phone_number,
+      avatar_url: user.avatar_url
+    },
+  });
+});
+
+export const updateUserByRole = async (req, res, next) => {
+  try {
+    const { role, id } = req.params;
+    const userData = req.body;
+    const avatarFile = req.file || null;
+
+    const avatarUrl = await userServices.updateUserByRole(
+      id,
+      role,
+      userData,
+      avatarFile
+    );
+
+    res.json({
+      success: true,
+      message: `${role} profile update success`,
+      avatar_url: avatarUrl
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteUser = asyncHandler(async (req, res) => {
   const userId = req.params.id;
   if (!userId) throw new AppError("User ID is required", 400);
@@ -98,5 +167,21 @@ export const deleteUser = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "User deleted successfully",
+  });
+});
+
+export const updateUserRole = asyncHandler(async (req, res) => {
+  const userId = req.params.id;
+  const { role } = req.body;
+
+  if (!userId) throw new AppError("User ID is required", 400);
+  if (!role) throw new AppError("New role is required", 400);
+
+  const updatedUser = await userServices.updateUserRole(userId, role);
+
+  res.status(200).json({
+    success: true,
+    message: "User role updated successfully",
+    data: updatedUser,
   });
 });

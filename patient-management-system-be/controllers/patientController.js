@@ -60,6 +60,22 @@ export const updatePatient = asyncHandler(async (req, res) => {
   });
 });
 
+export const updatePatientInfo = asyncHandler(async (req, res) => {
+  const payload = req.body;
+  const { id } = payload;
+  
+  if (!id) {
+    throw new AppError("Patient ID is required", 400);
+  }
+
+  const updatedPatient = await patientService.updatePatientInfo(id, payload);
+  res.status(200).json({
+    success: true,
+    message: "Patient info updated successfully",
+    data: updatedPatient
+  });
+});
+
 export const deletePatient = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!id) {
