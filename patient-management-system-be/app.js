@@ -25,6 +25,7 @@ import clinicServicesRouter from './routes/clinicRoutes.js';
 import receptionistRouter from './routes/receptionistRoutes.js';
 import invoiceRouter from './routes/invoiceRoutes.js';
 import accountantRouter from './routes/accountantRoutes.js';
+import labServiceRoutes from './routes/labServiceRoutes.js';
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use("/users", userRouter);
 app.use('/medical-record', medicalRecordRouter);
 app.use('/lab-orders', labOrderRouter);
 app.use('/departments', departmentRoutes);
+app.use('/lab-services', labServiceRoutes);
 app.use('/clinic-service', serviceRoutes);
 app.use('/system-config', systemConfigRoutes);
 app.use('/doctor-assignments', doctorAssignmentRouter);

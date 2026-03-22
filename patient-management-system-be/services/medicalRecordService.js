@@ -199,7 +199,15 @@ export const getMedicalRecordById = async (recordId) => {
                 )
             ),
             Prescriptions (*),
-            LabOrders (*)
+            LabOrders (
+                *,
+                LabServices (
+                    lab_service_id,
+                    name,
+                    description,
+                    price
+                )
+            )
         `)
         .eq('record_id', recordId)
         .single();
@@ -214,7 +222,15 @@ export const getMedicalRecordByAppointment = async (appointmentId) => {
         .select(`
             *,
             Prescriptions (*),
-            LabOrders (*)
+            LabOrders (
+                *,
+                LabServices (
+                    lab_service_id,
+                    name,
+                    description,
+                    price
+                )
+            )
         `)
         .eq('appointment_id', appointmentId)
         .single();
@@ -241,7 +257,15 @@ export const getMedicalRecordsByPatient = async (patientId) => {
                 )
             ),
             Prescriptions (*),
-            LabOrders (*)
+            LabOrders (
+                *,
+                LabServices (
+                    lab_service_id,
+                    name,
+                    description,
+                    price
+                )
+            )
         `)
         .eq('Appointments.patient_id', patientId)
         .order('created_at', { ascending: false });

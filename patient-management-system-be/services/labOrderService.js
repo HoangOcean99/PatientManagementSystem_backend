@@ -3,6 +3,7 @@ import { AppError } from "../utils/app-error.js";
 
 // ============================================================
 // 0. Lấy tất cả Lab Orders (filter + phân trang)
+//    JOIN LabServices để lấy tên, giá xét nghiệm
 // ============================================================
 export const getAllLabOrders = async (query = {}) => {
     const { status, record_id, patient_id, page = 1, limit = 20 } = query;
@@ -14,6 +15,12 @@ export const getAllLabOrders = async (query = {}) => {
         .from('LabOrders')
         .select(`
             *,
+            LabServices (
+                lab_service_id,
+                name,
+                description,
+                price
+            ),
             MedicalRecords (
                 record_id,
                 Appointments (
@@ -85,22 +92,47 @@ export const createLabOrders = async (recordId, doctorId, labOrders) => {
         throw new AppError('At least one lab order is required', 400);
     }
 
+    // Validate: mỗi lab order phải có lab_service_id
     const validOrders = labOrders
-        .filter(l => l.test_name && l.test_name.trim())
+        .filter(l => l.lab_service_id && l.lab_service_id.trim())
         .map(l => ({
             record_id: recordId,
-            test_name: l.test_name.trim(),
+            lab_service_id: l.lab_service_id.trim(),
             status: 'ordered'
         }));
 
     if (validOrders.length === 0) {
-        throw new AppError('All lab orders must have a test_name', 400);
+        throw new AppError('All lab orders must have a lab_service_id', 400);
+    }
+
+    // Kiểm tra tất cả lab_service_id có tồn tại và active không
+    const serviceIds = validOrders.map(o => o.lab_service_id);
+    const { data: services, error: serviceError } = await supabase
+        .from('LabServices')
+        .select('lab_service_id')
+        .in('lab_service_id', serviceIds)
+        .eq('is_active', true);
+
+    if (serviceError) throw new AppError(serviceError.message, 500);
+
+    if (!services || services.length !== serviceIds.length) {
+        const foundIds = services ? services.map(s => s.lab_service_id) : [];
+        const missingIds = serviceIds.filter(id => !foundIds.includes(id));
+        throw new AppError(`Lab services not found or inactive: ${missingIds.join(', ')}`, 400);
     }
 
     const { data: newOrders, error: insertError } = await supabase
         .from('LabOrders')
         .insert(validOrders)
-        .select();
+        .select(`
+            *,
+            LabServices (
+                lab_service_id,
+                name,
+                description,
+                price
+            )
+        `);
 
     if (insertError) throw new AppError(insertError.message, 500);
 
@@ -109,12 +141,19 @@ export const createLabOrders = async (recordId, doctorId, labOrders) => {
 
 // ============================================================
 // 2. Chi tiết 1 lab order (BS xét nghiệm xem + cập nhật)
+//    JOIN LabServices để lấy thông tin dịch vụ xét nghiệm
 // ============================================================
 export const getLabOrderById = async (labOrderId) => {
     const { data, error } = await supabase
         .from('LabOrders')
         .select(`
             *,
+            LabServices (
+                lab_service_id,
+                name,
+                description,
+                price
+            ),
             MedicalRecords (
                 record_id,
                 symptoms,
@@ -204,7 +243,15 @@ export const updateLabOrder = async (labOrderId, updateData) => {
         .from('LabOrders')
         .update(sanitized)
         .eq('lab_order_id', labOrderId)
-        .select()
+        .select(`
+            *,
+            LabServices (
+                lab_service_id,
+                name,
+                description,
+                price
+            )
+        `)
         .single();
 
     if (error) {
