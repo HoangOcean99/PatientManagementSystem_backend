@@ -201,4 +201,90 @@ export const sendFamilyInvitationEmail = async (targetEmail, inviterName, code) 
     `;
 
     await sendMail(targetEmail, "[MedSchedule] Lời mời liên kết gia đình", htmlContent);
+};
+
+// ── Send Invoice Email ──
+export const sendInvoiceEmail = async (invoiceData) => {
+    const patientName = invoiceData.Patients?.Users?.full_name || 'Quý khách';
+    const email = invoiceData.Patients?.Users?.email;
+    if (!email) return; // Cannot send without email
+
+    const items = invoiceData.InvoiceItems || [];
+    const totalAmount = invoiceData.total_amount || 0;
+    const depositPaid = invoiceData.Appointments?.deposit_paid || 0;
+    const remaining = totalAmount - depositPaid;
+    const invoiceIdShort = invoiceData.invoice_id.substring(0,8).toUpperCase();
+
+    const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+
+    const itemsHtml = items.map((item, idx) => `
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${idx + 1}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${item.item_name}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center;">${item.quantity}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right;">${formatCurrency(item.unit_price)}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right;">${formatCurrency(item.quantity * item.unit_price)}</td>
+        </tr>
+    `).join('');
+
+    const htmlContent = `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #f0f0f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="background-color: #0284c7; padding: 30px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px; letter-spacing: 1px;">MedSchedule</h1>
+            <p style="color: #e0f2fe; margin-top: 5px; font-size: 14px;">Hoá đơn điện tử / Biên lai thanh toán</p>
+        </div>
+        
+        <div style="padding: 40px 30px; color: #334155; line-height: 1.6;">
+            <p>Xin chào <b>${patientName}</b>,</p>
+            <p>Cảm ơn quý khách đã tin tưởng và sử dụng dịch vụ tại phòng khám. Dưới đây là chi tiết biên lai thanh toán của quý khách:</p>
+            
+            <div style="margin: 25px 0;">
+                <p style="margin: 5px 0;"><b>Mã hoá đơn:</b> ${invoiceIdShort}</p>
+                <p style="margin: 5px 0;"><b>Thời gian thanh toán:</b> ${new Date().toLocaleString('vi-VN')}</p>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 14px;">
+                <thead>
+                    <tr style="background-color: #f8fafc; text-align: left;">
+                        <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">STT</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #e2e8f0;">Dịch vụ/Thuốc</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; text-align: center; white-space: nowrap;">SL</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; text-align: right;">Đơn giá</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; text-align: right;">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                </tbody>
+            </table>
+
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; margin: 25px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Tổng cộng:</span>
+                    <strong>${formatCurrency(totalAmount)}</strong>
+                </div>
+                ${depositPaid > 0 ? `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #15803d;">
+                    <span>Đã đặt cọc:</span>
+                    <span>-${formatCurrency(depositPaid)}</span>
+                </div>
+                ` : ''}
+                <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; border-top: 2px solid #e2e8f0; padding-top: 10px; margin-top: 10px; color: #0284c7;">
+                    <span>Thực thu:</span>
+                    <span>${formatCurrency(remaining)}</span>
+                </div>
+            </div>
+            
+            <p style="font-size: 14px; color: #64748b; text-align: center;">Kính chúc quý khách thật nhiều sức khoẻ!</p>
+            
+            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 30px 0;">
+            
+            <div style="text-align: center;">
+                <p style="font-size: 12px; color: #94a3b8; margin: 0;">© 2026 MedSchedule. Tất cả quyền được bảo lưu.</p>
+            </div>
+        </div>
+    </div>
+    `;
+
+    await sendMail(email, `[MedSchedule] Biên lai thanh toán #${invoiceIdShort}`, htmlContent);
 }; 

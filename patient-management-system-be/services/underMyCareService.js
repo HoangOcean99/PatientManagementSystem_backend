@@ -454,3 +454,27 @@ export const acceptEmailInvitation = async (childUserId, invitationCode) => {
 
     return relation;
 };
+
+// ── Get parent info of a child ──
+export const getParentOfChild = async (childUserId) => {
+    const { data, error } = await supabase
+        .from("FamilyRelationships")
+        .select(`
+            parent_user_id,
+            Users!FamilyRelationships_parent_user_id_fkey (
+                full_name,
+                email
+            )
+        `)
+        .eq("child_user_id", childUserId)
+        .limit(1)
+        .single();
+
+    if (error || !data) return null;
+    return {
+        parent_user_id: data.parent_user_id,
+        email: data.Users?.email,
+        full_name: data.Users?.full_name
+    };
+};
+

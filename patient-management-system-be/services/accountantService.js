@@ -1,5 +1,6 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
+import { getParentOfChild } from "./underMyCareService.js";
 
 // Lấy danh sách cần thu cọc
 export const getPendingDeposits = async () => {
@@ -16,11 +17,11 @@ export const getPendingDeposits = async () => {
             ClinicServices ( name )
         `)
         .gt('deposit_required', 0)
-        .neq('status', 'cancelled')
+        .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
     if (error) throw new AppError(error.message, 500);
-
+    console.log(data);
     const pendingDeposits = data.filter(appt => (appt.deposit_paid || 0) < appt.deposit_required);
     return pendingDeposits;
 };
@@ -41,7 +42,7 @@ export const getPendingInvoices = async () => {
             ),
             InvoiceItems (*)
         `)
-        .eq('payment_status', 'unpaid')
+        // .eq('payment_status', 'unpaid')
         .order('issued_at', { ascending: false });
 
     if (error) throw new AppError(error.message, 500);
@@ -62,18 +63,50 @@ export const confirmDeposit = async (appointmentId, amount) => {
     const newPaid = Number(appt.deposit_paid || 0) + amountToPay;
 
     const updatePayload = { deposit_paid: newPaid };
+    let justConfirmed = false;
     if (newPaid >= appt.deposit_required && appt.status === 'pending') {
         updatePayload.status = 'confirmed';
+        justConfirmed = true;
     }
 
     const { data, error } = await supabase
         .from('Appointments')
         .update(updatePayload)
         .eq('appointment_id', appointmentId)
-        .select()
+        .select(`
+            *,
+            Patients ( patient_id, Users ( full_name, email, is_minor ) ),
+            Doctors ( Users ( full_name ) ),
+            ClinicServices ( name ),
+            DoctorSlots ( slot_date, start_time, end_time )
+        `)
         .single();
 
     if (error) throw new AppError(error.message, 500);
+
+    if (justConfirmed) {
+        import('./gmailService.js').then(async ({ sendAppointmentConfirmation }) => {
+            try {
+                const patientUser = data.Patients?.Users;
+                const patientId = data.Patients?.patient_id;
+                let targetEmail = patientUser?.email;
+
+                if (patientUser?.is_minor && patientId) {
+                    const parentInfo = await getParentOfChild(patientId);
+                    if (parentInfo && parentInfo.email) {
+                        targetEmail = parentInfo.email;
+                    }
+                }
+                
+                if (targetEmail) {
+                    await sendAppointmentConfirmation(targetEmail, data);
+                }
+            } catch (err) {
+                console.error("Failed to send appointment confirmation email:", err);
+            }
+        }).catch(err => console.error("Failed to import gmailService:", err));
+    }
+
     return data;
 };
 
@@ -90,11 +123,33 @@ export const payInvoice = async (invoiceId, paymentMethod) => {
         .eq('invoice_id', invoiceId)
         .select(`
             *,
-            Patients ( Users ( full_name ) )
+            Patients ( patient_id, Users ( full_name, email, is_minor ) ),
+            InvoiceItems (*),
+            Appointments (deposit_paid)
         `)
         .single();
 
     if (error) throw new AppError(error.message, 500);
+
+    import('./gmailService.js').then(async ({ sendInvoiceEmail }) => {
+        try {
+            const patientUser = data.Patients?.Users;
+            const patientId = data.Patients?.patient_id;
+
+            // Check if patient is a minor without an email or just is a minor
+            if (patientUser?.is_minor && patientId) {
+                const parentInfo = await getParentOfChild(patientId);
+                if (parentInfo && parentInfo.email) {
+                    // Override email with parent's email before sending
+                    data.Patients.Users.email = parentInfo.email;
+                }
+            }
+            await sendInvoiceEmail(data);
+        } catch (err) {
+            console.error("Failed to send invoice email:", err);
+        }
+    }).catch(err => console.error("Failed to import gmailService:", err));
+
     return data;
 };
 
