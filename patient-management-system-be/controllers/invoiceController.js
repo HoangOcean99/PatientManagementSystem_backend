@@ -28,3 +28,10 @@ export const createInvoice = asyncHandler(async (req, res) => {
     const data = await invoiceService.createInvoice(req.body);
     res.status(201).json({ data });
 });
+
+export const updateInvoiceStatus = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { status, payment_method } = req.body;
+    const data = await invoiceService.updateInvoiceStatus(id, status, payment_method);
+    res.json({ message: "Cập nhật trạng thái hóa đơn thành công", data });
+});

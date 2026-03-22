@@ -49,3 +49,19 @@ export const createInvoice = async (invoiceData) => {
 
     return await getInvoiceById(invoice.invoice_id);
 };
+
+export const updateInvoiceStatus = async (invoiceId, status, paymentMethod) => {
+    const updateData = {};
+    if (status) updateData.payment_status = status;
+    if (paymentMethod) updateData.payment_method = paymentMethod;
+
+    const { data, error } = await supabase
+        .from('Invoices')
+        .update(updateData)
+        .eq('invoice_id', invoiceId)
+        .select()
+        .single();
+
+    if (error) throw new AppError(error.message, 500);
+    return data;
+};
