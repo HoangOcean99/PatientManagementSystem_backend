@@ -1,0 +1,183 @@
+import * as doctorSlotService from "../services/doctorSlotService.js";
+import * as doctorService from "../services/doctorService.js";
+import asyncHandler from '../utils/async-handler.js';
+import { AppError } from "../utils/app-error.js";
+
+
+export const getListDoctorSlots = async (req, res) => {
+    const doctorSlots = await doctorSlotService.getListDoctorSlots();
+    res.status(200).json(doctorSlots);
+}
+
+export const getDoctorSlotById = async (req, res) => {
+    const doctorSlot = await doctorSlotService.getDoctorSlotById(req.params.slot_id);
+    res.status(200).json(doctorSlot);
+}
+
+export const getAvailableDoctorSlotsByDoctorIdAndDate = async (req, res, next) => {
+    try {
+        const { doctor_id, start_date, end_date } = req.body;
+
+        // Kiểm tra xem dữ liệu có đầy đủ không
+        if (!doctor_id || !start_date || !end_date) {
+            return res.status(400).json({ message: "Thiếu thông tin doctor_id, start_date hoặc end_date!" });
+        }
+
+        const availableDoctorSlots = await doctorSlotService.getAvailableDoctorSlotsByDoctorIdAndDate(doctor_id, start_date, end_date);
+
+        res.status(200).json({
+            success: true,
+            data: availableDoctorSlots
+        });
+    } catch (error) {
+        // Chuyển lỗi sang cho middleware xử lý lỗi (nếu cậu có cài đặt)
+        // hoặc phản hồi trực tiếp lỗi về client
+        console.error("Lỗi Controller:", error);
+        res.status(500).json({ message: "Đã có lỗi xảy ra", error: error.message });
+    }
+}
+
+// Case 3: chọn đúng bác sĩ + đúng 1 ngày cụ thể
+export const getAvailableDoctorSlotsByDoctorIdAndExactDate = async (req, res, next) => {
+    try {
+        const { doctor_id, date } = req.body;
+
+        if (!doctor_id || !date) {
+            return res.status(400).json({ message: "Thiếu thông tin doctor_id hoặc date!" });
+        }
+
+        const availableDoctorSlots = await doctorSlotService.getAvailableDoctorSlotsByDoctorIdAndExactDate(
+            doctor_id,
+            date
+        );
+
+        res.status(200).json({
+            success: true,
+            data: availableDoctorSlots,
+        });
+    } catch (error) {
+        console.error("Lỗi Controller (ExactDate):", error);
+        res.status(500).json({ message: "Đã có lỗi xảy ra", error: error.message });
+    }
+};
+
+
+export const getAvailableDoctorSlots = async (req, res, next) => {
+    try {
+        const department_id = req.body;
+        console.log("Dữ liệu nhận được:", { department_id });
+        if (!department_id) {
+            return res.status(400).json({ message: "Thiếu thông tin department_id" });
+        }
+        const availableDoctorSlots = await doctorSlotService.getAvailableDoctorSlots(department_id);
+        res.status(200).json(availableDoctorSlots);
+    } catch (error) {
+        next(error);
+    }
+}
+/**
+ * GET /doctor-slots/list
+ * Lấy danh sách slots (filter: doctor_id, slot_date, is_booked, date_from, date_to)
+ */
+export const getAllSlots = asyncHandler(async (req, res, next) => {
+    const { doctor_id, slot_date, is_booked, date_from, date_to } = req.query;
+
+    const filters = {};
+    if (doctor_id) filters.doctor_id = doctor_id;
+    if (slot_date) filters.slot_date = slot_date;
+    if (is_booked !== undefined) filters.is_booked = is_booked === 'true';
+    if (date_from) filters.date_from = date_from;
+    if (date_to) filters.date_to = date_to;
+
+    const slots = await doctorSlotService.getAllSlots(filters);
+
+    res.status(200).json({
+        status: 'success',
+        results: slots.length,
+        data: slots
+    });
+});
+
+/**
+ * GET /doctor-slots/detail/:slotId
+ * Lấy chi tiết 1 slot theo ID
+ */
+export const getSlotById = asyncHandler(async (req, res, next) => {
+    const { slotId } = req.params;
+
+    if (!slotId) {
+        return next(new AppError('Slot ID is required', 400));
+    }
+
+    const slot = await doctorSlotService.getSlotById(slotId);
+
+    if (!slot) {
+        return next(new AppError('Slot not found', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: slot
+    });
+});
+
+/**
+ * POST /doctor-slots/create
+ * Tạo 1 slot mới (Admin only)
+ * Body: { doctor_id, slot_date, start_time, end_time }
+ */
+export const createSlot = asyncHandler(async (req, res, next) => {
+    const slotData = req.body;
+
+    const slot = await doctorSlotService.createSlot(slotData);
+
+    res.status(201).json({
+        status: 'success',
+        message: 'Slot created successfully',
+        data: slot
+    });
+});
+
+
+/**
+ * PATCH /doctor-slots/update/:slotId
+ * Cập nhật 1 slot (Admin only)
+ * Body: { slot_date?, start_time?, end_time? }
+ */
+export const updateSlot = asyncHandler(async (req, res, next) => {
+    const { slotId } = req.params;
+    const updateData = req.body;
+
+    if (!slotId) {
+        return next(new AppError('Slot ID is required', 400));
+    }
+
+    const slot = await doctorSlotService.updateSlot(slotId, updateData);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Slot updated successfully',
+        data: slot
+    });
+});
+
+/**
+ * DELETE /doctor-slots/delete/:slotId
+ * Xóa 1 slot (Admin only)
+ */
+export const deleteSlot = asyncHandler(async (req, res, next) => {
+    const { slotId } = req.params;
+
+    if (!slotId) {
+        return next(new AppError('Slot ID is required', 400));
+    }
+
+    await doctorSlotService.deleteSlot(slotId);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Slot deleted successfully'
+    });
+});
+
+

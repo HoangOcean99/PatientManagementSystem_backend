@@ -13,7 +13,7 @@ const mockUpdatedDoctor = {
     doctor_id: 1,
     specialization: 'Nhi khoa',
     bio: 'Test bio',
-    room_number: '102',
+    room_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     Users: {
         user_id: 1,
         full_name: 'Nguyễn Văn A',
@@ -23,6 +23,10 @@ const mockUpdatedDoctor = {
         status: 'active'
     }
 };
+
+// Also add Rooms object to match new schema
+mockUpdatedDoctor.Rooms = { room_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', room_number: '102' };
+mockUpdatedDoctor.Departments = { department_id: 'dept-uuid-001', name: 'Nhi khoa' };
 
 describe('Doctor Controller - updateDoctor() - Bảng mới (9 Cases)', () => {
     let mockReq;
@@ -46,7 +50,7 @@ describe('Doctor Controller - updateDoctor() - Bảng mới (9 Cases)', () => {
             phone_number: '0912345678',
             avatar_url: 'avatar.jpg', // Text URL
             specialization: 'Nhi khoa',
-            room_number: '102',
+            room_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
             status: 'active'
         };
         doctorService.updateDoctor.mockResolvedValue(mockUpdatedDoctor);

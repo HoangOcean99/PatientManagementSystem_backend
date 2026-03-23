@@ -1,0 +1,69 @@
+import { supabase } from "../supabaseClient.js";
+import { AppError } from "../utils/app-error.js";
+
+
+export const getListClinicServices = async () => {
+  const { data: clinicServices, error } = await supabase
+    .from('ClinicServices')
+    .select('*')
+    .order('name', { ascending: true });
+  if (error) throw new AppError(`Lỗi khi lấy danh sách dịch vụ: ${error.message}`, 500);
+  return clinicServices;
+}
+
+export const getClinicServiceById = async (service_id) => {
+  const { data: clinicService, error } = await supabase
+    .from('ClinicServices')
+    .select('*')
+    .eq('service_id', service_id)
+    .single();
+  if (error) throw new AppError(`Lỗi khi lấy dịch vụ: ${error.message}`, 500);
+  if (!clinicService) throw new AppError('Dịch vụ không tồn tại', 404);
+  return clinicService;
+}
+
+export const getPriceByServiceId = async (service_id) => {
+  const { data: serviceInfo, error: serviceError } = await supabase
+    .from('ClinicServices')
+    .select('price')
+    .eq('service_id', service_id)
+    .single();
+  if (serviceError || !serviceInfo) {
+    throw new AppError("Không tìm thấy thông tin dịch vụ để lấy giá tiền", 404);
+  }
+  return serviceInfo.price;
+}
+
+export const getClinicServicesByDepartmentId = async (departmentId) => {
+  const { data, error } = await supabase
+    .from('ClinicServices')
+    .select(`
+    service_id,
+    name,
+    price,
+    Departments!inner ( department_id, name )
+    `)
+    .eq('Departments.department_id', departmentId);
+  if (error) throw new AppError(error.message, 500);
+  return data;
+};
+
+  export const createClinicService = async (service) => {
+    const { data, error } = await supabase.from('ClinicServices').insert(service).select().single();
+    if (error) throw new AppError(error.message, 500);
+    if (!data || Object.keys(data).length === 0) {
+      throw new AppError("Không thể tạo dịch vụ mới", 400);
+    }
+    return data;
+  }
+
+export const updateClinicService = async (service_id, service) => {
+  const { data, error } = await supabase.from('ClinicServices').update(service).eq('service_id', service_id).select().single();
+  if (error) throw new AppError(error.message, 500);
+  return data;
+}
+
+export const deleteClinicService = async (service_id) => {  const { data, error } = await supabase.from('ClinicServices').delete().eq('service_id', service_id).select().single();
+  if (error) throw new AppError(error.message, 500);
+  return data;
+}

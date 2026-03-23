@@ -1,4 +1,5 @@
 import * as doctorService from '../services/doctorService.js';
+import * as patientService from '../services/patientService.js';
 import asyncHandler from '../utils/async-handler.js';
 import { AppError } from '../utils/app-error.js';
 
@@ -7,7 +8,7 @@ export const getAllDoctors = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success',
-        results: doctors.length,
+        // results: doctors.length,
         data: doctors
     });
 });
@@ -44,15 +45,10 @@ export const searchDoctors = asyncHandler(async (req, res, next) => {
 });
 
 export const updateDoctor = asyncHandler(async (req, res, next) => {
-    // Lấy ID từ params (chuẩn RESTful: /doctors/update/:id) 
-    const { doctorId } = req.params;
     const updateData = req.body;
+    const avatarFile = req.file || null;
 
-    if (!doctorId) {
-        return next(new AppError('Doctor ID is required', 400));
-    }
-
-    const updatedDoctor = await doctorService.updateDoctor(doctorId, updateData);
+    const updatedDoctor = await doctorService.updateDoctor(updateData, avatarFile);
 
     if (!updatedDoctor) {
         return next(new AppError('Doctor not found or update failed', 404));
@@ -61,6 +57,37 @@ export const updateDoctor = asyncHandler(async (req, res, next) => {
     res.status(200).json({
         status: 'success',
         data: updatedDoctor
+    });
+});
+
+export const updateDoctorInfo = asyncHandler(async (req, res, next) => {
+    const updateData = req.body;
+
+    const updatedDoctor = await doctorService.updateDoctorInfo(updateData);
+
+    if (!updatedDoctor) {
+        return next(new AppError('Doctor not found or update failed', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: updatedDoctor
+    });
+});
+
+export const createDoctorProfile = asyncHandler(async (req, res, next) => {
+    const { doctorId } = req.params;
+    const profileData = req.body;
+
+    if (!doctorId) {
+        return next(new AppError('Doctor ID is required', 400));
+    }
+
+    const doctor = await doctorService.createDoctorProfile(doctorId, profileData);
+
+    res.status(201).json({
+        status: 'success',
+        data: doctor
     });
 });
 
@@ -78,5 +105,65 @@ export const getAppointmentsByDoctorId = asyncHandler(async (req, res, next) => 
         status: 'success',
         results: appointments.length,
         data: appointments
+    });
+});
+
+export const getDoctorByDepartmentId = asyncHandler(async (req, res, next) => {
+    const { departmentId } = req.params;
+
+    const doctors = await doctorService.getDoctorByDepartmentId(departmentId);
+
+    res.status(200).json({
+        status: 'success',
+        results: doctors.length,
+        data: doctors
+    })
+});
+
+export const getPatientById = asyncHandler(async (req, res, next) => {
+    const { patientId } = req.params;
+
+    if (!patientId) {
+        return next(new AppError('Patient ID is required', 400));
+    }
+
+    const patient = await patientService.getPatientById(patientId);
+
+    res.status(200).json({
+        status: 'success',
+        data: patient
+    });
+});
+
+export const createDoctor = asyncHandler(async (req, res, next) => {
+    const { doctor } = req.body;
+    const createdDoctor = await doctorService.createDoctor(doctor);
+
+    res.status(200).json({
+        status: 'success',
+        data: createdDoctor
+    });
+});
+
+export const updateDoctorById = asyncHandler(async (req, res, next) => {
+    const { doctorId } = req.params;
+    const updateData = req.body;
+
+    const updatedDoctor = await doctorService.updateDoctorById(doctorId, updateData);
+
+    res.status(200).json({
+        status: 'success',
+        data: updatedDoctor
+    });
+});
+
+export const deleteDoctorById = asyncHandler(async (req, res, next) => {
+    const { doctorId } = req.params;
+
+    const deletedDoctor = await doctorService.deleteDoctorById(doctorId);
+
+    res.status(200).json({
+        status: 'success',
+        data: deletedDoctor
     });
 });

@@ -1,17 +1,20 @@
 import * as medicalRecordService from '../services/medicalRecordService.js';
 import asyncHandler from '../utils/async-handler.js';
 import { AppError } from '../utils/app-error.js';
+import { checkDependentAccess } from '../middlewares/auth.js';
 
 export const startExamination = asyncHandler(async (req, res, next) => {
-    // Trong thực tế doctor_id sẽ lấy từ token (req.user.id), 
-    // ở đây dùng body tạm thời cho việc test API
-    const { appointment_id, doctor_id, patient_id } = req.params;
-    
-    if (!appointment_id || !doctor_id || !patient_id) {
-        return next(new AppError('Missing appointment_id, doctor_id, or patient_id', 400));
+    const { appointment_id, doctor_id } = req.body;
+
+    if (!appointment_id) {
+        return next(new AppError('Appointment ID is required', 400));
     }
 
-    const newRecord = await medicalRecordService.startExamination(appointment_id, doctor_id, patient_id);
+    if (!doctor_id) {
+        return next(new AppError('Doctor ID is required', 400));
+    }
+
+    const newRecord = await medicalRecordService.startExamination(appointment_id, doctor_id);
 
     res.status(200).json({
         status: 'success',
@@ -28,7 +31,7 @@ export const updateMedicalRecord = asyncHandler(async (req, res, next) => {
     if (!recordId) {
         return next(new AppError('Record ID is required', 400));
     }
-    
+
     if (!doctor_id) {
         return next(new AppError('Doctor ID is required for authorization', 400));
     }
@@ -42,18 +45,17 @@ export const updateMedicalRecord = asyncHandler(async (req, res, next) => {
 });
 
 export const completeExamination = asyncHandler(async (req, res, next) => {
-    const { recordId } = req.params;
-    const { doctor_id } = req.body; // mock user token
+    const { record_id, doctor_id } = req.body;
 
-    if (!recordId) {
+    if (!record_id) {
         return next(new AppError('Record ID is required', 400));
     }
-    
+
     if (!doctor_id) {
         return next(new AppError('Doctor ID is required for authorization', 400));
     }
 
-    const result = await medicalRecordService.completeExamination(recordId, doctor_id);
+    const result = await medicalRecordService.completeExamination(record_id, doctor_id);
 
     res.status(200).json({
         status: 'success',
@@ -96,17 +98,46 @@ export const getMedicalRecordByAppointment = asyncHandler(async (req, res, next)
 });
 
 export const getMedicalRecordsByPatient = asyncHandler(async (req, res, next) => {
-    const { patientId } = req.params;
+    try {
+        const { patientId } = req.params;
 
-    if (!patientId) {
-        return next(new AppError('Patient ID is required', 400));
+        if (!patientId) {
+            return next(new AppError('Patient ID is required', 400));
+        }
+
+        if (!req.user || !req.user.id) {
+            return res.status(500).json({ message: "req.user.id is missing. Make sure requireAuth middleware is applied to the route." });
+        }
+
+
+        const records = await medicalRecordService.getMedicalRecordsByPatient(patientId);
+
+        res.status(200).json({
+            status: 'success',
+            results: records?.length || 0,
+            data: records
+        });
+    } catch (err) {
+        console.error("GET_MEDICAL_RECORDS_ERR:", err);
+        return res.status(500).json({
+            message: "DEBUG_500: " + err.message,
+            stack: err.stack
+        });
+    }
+});
+
+export const sendFollowUpReminder = asyncHandler(async (req, res, next) => {
+    const { patient_id, doctor_id, follow_up_date } = req.body;
+
+    if (!patient_id || !doctor_id || !follow_up_date) {
+        return next(new AppError('patient_id, doctor_id and follow_up_date are required', 400));
     }
 
-    const records = await medicalRecordService.getMedicalRecordsByPatient(patientId);
+    const result = await medicalRecordService.sendFollowUpReminder(patient_id, doctor_id, follow_up_date);
 
     res.status(200).json({
         status: 'success',
-        results: records.length,
-        data: records
+        message: result.message
     });
 });
+

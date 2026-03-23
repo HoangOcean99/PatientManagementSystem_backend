@@ -15,17 +15,21 @@
     "debug": "~2.6.9",
     "dotenv": "^17.2.4",
     "express": "~4.16.1",
+    "express-list-endpoints": "^7.1.1",
     "express-validator": "^7.3.1",
+    "ics": "^3.8.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.4",
     "morgan": "~1.9.1",
+    "multer": "^2.1.1",
     "nodemailer": "^8.0.1"
   },
   "devDependencies": {
     "jest": "^30.2.0",
     "nock": "^14.0.11",
     "nodemon": "^3.1.11",
-    "supertest": "^7.2.2"
+    "supertest": "^7.2.2",
+    "vitest": "^4.0.18"
   },
   "type": "module",
   "main": "app.js",
