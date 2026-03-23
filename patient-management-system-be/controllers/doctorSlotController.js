@@ -61,24 +61,6 @@ export const getAvailableDoctorSlotsByDoctorIdAndExactDate = async (req, res, ne
     }
 };
 
-export const createDoctorSlot = async (req, res, next) => {
-    try {
-        const { doctor_id, slot_date, start_time, end_time } = req.body;
-
-        const doctor = await doctorService.getDoctorById(doctor_id);
-        if (!doctor) throw new AppError("Bác sĩ không tồn tại", 404);
-
-        const newDoctorSlot = await doctorSlotService.createDoctorSlot(doctor_id, slot_date, start_time, end_time);
-
-        res.status(200).json({
-            success: true,
-            message: "Tạo khung giờ thành công",
-            data: newDoctorSlot
-        });
-    } catch (error) {
-        next(error); // Chuyển lỗi sang middleware xử lý lỗi
-    }
-}
 
 export const getAvailableDoctorSlots = async (req, res, next) => {
     try {
@@ -156,22 +138,6 @@ export const createSlot = asyncHandler(async (req, res, next) => {
     });
 });
 
-/**
- * POST /doctor-slots/create-bulk
- * Tạo nhiều slots cùng lúc (Admin only)
- * Body: { doctor_id, slot_date, slots: [{ start_time, end_time }, ...] }
- */
-export const createBulkSlots = asyncHandler(async (req, res, next) => {
-    const slotsData = req.body;
-
-    const slots = await doctorSlotService.createBulkSlots(slotsData);
-
-    res.status(201).json({
-        status: 'success',
-        message: `${slots.length} slot(s) created successfully`,
-        data: slots
-    });
-});
 
 /**
  * PATCH /doctor-slots/update/:slotId
