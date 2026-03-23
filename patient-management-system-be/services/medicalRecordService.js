@@ -168,7 +168,6 @@ export const startExamination = async (appointmentId, doctorId) => {
         .from('MedicalRecords')
         .insert([{
             appointment_id: appointmentId,
-            doctor_id: doctorId,
             diagnosis: ''
         }])
         .select()
