@@ -24,19 +24,33 @@ export const requireAuth = async (req, res, next) => {
 
 export const requireRole = (roles = []) => {
   return async (req, res, next) => {
-    const { data } = await supabase
-      .from('Users')
-      .select('role')
-      .eq('user_id', req.user.id)
-      .single();
+    try {
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: 'Unauthorized: Missing user context' });
+      }
 
-    if (!roles.includes(data.role)) {
-      return res.status(403).json({ message: 'No permission' });
+      const { data, error } = await supabase
+        .from('Users')
+        .select('role')
+        .eq('user_id', req.user.id)
+        .single();
+
+      if (error || !data) {
+        return res.status(401).json({ message: 'User not found or database error' });
+      }
+
+      if (!roles.includes(data.role)) {
+        return res.status(403).json({ message: 'No permission' });
+      }
+
+      next();
+    } catch (err) {
+      console.error("requireRole middleware error:", err);
+      return res.status(500).json({ message: 'Internal server error in role verification' });
     }
-
-    next();
   };
 };
+
 
 export const checkDependentAccess = async (parentId, childId) => {
   if (parentId === childId) return true;

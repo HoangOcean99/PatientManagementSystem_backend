@@ -10,9 +10,10 @@ import { getListAppointmentsByStatus } from "../controllers/appointmentControlle
 import { updateAppointmentStatus } from "../controllers/appointmentController.js";
 import { getTodayCheckedInAppointments } from "../controllers/appointmentController.js";
 import { getListAppointmentsByCurrentUserId } from "../controllers/appointmentController.js";
-import { requireAuth } from "../middlewares/auth.js";
+import { requireAuth, requireRole } from "../middlewares/auth.js";
 
 const appointmentRouter = express.Router();
+appointmentRouter.use(requireRole(['admin', 'receptionist', 'patient', 'doctor']));
 
 appointmentRouter.get('/getList', getListAppointments);
 appointmentRouter.get('/getList/:appointment_id', getListAppointmentsByAppointmentId);

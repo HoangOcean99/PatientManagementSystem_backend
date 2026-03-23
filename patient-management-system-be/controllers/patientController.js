@@ -19,7 +19,7 @@ export const createPatient = asyncHandler(async (req, res) => {
 
 export const getPatientById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   if (!id) {
     throw new AppError("Patient ID is required", 400);
   }
@@ -50,24 +50,27 @@ export const getPatient = asyncHandler(async (req, res) => {
   });
 });
 export const updatePatient = asyncHandler(async (req, res) => {
-    const payload = req.body;
-    const patientId = payload.patient_id;
+  const payload = req.body;
+  const patientId = payload.patient_id;
 
-    if (!patientId) {
-        throw new AppError("Patient ID is required", 400);
-    }
+  if (!patientId) {
+    throw new AppError("Patient ID is required", 400);
+  }
 
-  await patientService.updatePatient(patientId, payload);
+  const avatarFile = req.file;
+
+  const updatedPatient = await patientService.updatePatient(payload, avatarFile);
   res.status(200).json({
     success: true,
     message: "Patient updated successfully",
+    data: updatedPatient,
   });
 });
 
 export const updatePatientInfo = asyncHandler(async (req, res) => {
   const payload = req.body;
   const { id } = payload;
-  
+
   if (!id) {
     throw new AppError("Patient ID is required", 400);
   }
@@ -85,9 +88,9 @@ export const deletePatient = asyncHandler(async (req, res) => {
   if (!id) {
     throw new AppError("Patient ID is required", 400);
   }
-  
+
   await patientService.deletePatient(id);
-  
+
   res.status(200).json({
     success: true,
     message: "Patient deleted successfully",

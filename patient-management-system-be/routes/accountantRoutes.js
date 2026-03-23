@@ -7,12 +7,11 @@ import {
     getDashboardStats,
     searchApptsForDeposit
 } from "../controllers/accountantController.js";
-import { requireAuth, requireRole } from "../middlewares/auth.js";
+import { requireRole } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-// Có thể thêm middleware bảo vệ route bằng role 'accountant' hoặc 'admin'
-// router.use(requireAuth, requireRole(['accountant', 'admin', 'staff']));
+router.use(requireRole(['accountant', 'admin']));
 
 router.get("/dashboard-stats", getDashboardStats);
 router.get("/pending-deposits", getPendingDeposits);

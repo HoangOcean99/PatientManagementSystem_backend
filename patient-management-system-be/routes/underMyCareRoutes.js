@@ -1,5 +1,5 @@
 import express from "express";
-import { requireAuth } from "../middlewares/auth.js";
+import { requireAuth, requireRole } from "../middlewares/auth.js";
 import {
     addDependent,
     getDependents,
@@ -15,7 +15,7 @@ import {
 const router = express.Router();
 
 // All routes require authentication
-router.use(requireAuth);
+router.use(requireAuth, requireRole(['patient']));
 
 // ── CRUD ──
 router.get("/", getDependents);

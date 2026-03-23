@@ -5,9 +5,10 @@ import {
     updateAssignment,
     dischargePatient,
 } from "../controllers/doctorAssignmentController.js";
-import { requireAuth } from "../middlewares/auth.js";
+import { requireAuth, requireRole } from "../middlewares/auth.js";
 
 const router = express.Router();
+router.use(requireRole(['admin', 'doctor']));
 
 // Get patients under doctor's care
 router.get("/:doctorId", requireAuth, getPatientsUnderCare);

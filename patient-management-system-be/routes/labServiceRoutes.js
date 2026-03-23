@@ -6,6 +6,7 @@ import {
     updateLabService,
     deleteLabService
 } from '../controllers/labServiceController.js';
+import { requireRole } from '../middlewares/auth.js';
 
 const router = express.Router();
 
@@ -16,12 +17,12 @@ router.get('/', getAllLabServices);
 router.get('/:labServiceId', getLabServiceById);
 
 // Tạo Lab Service
-router.post('/', createLabService);
+router.post('/', requireRole(['admin']), createLabService);
 
 // Cập nhật Lab Service
-router.put('/:labServiceId', updateLabService);
+router.put('/:labServiceId', requireRole(['admin']), updateLabService);
 
 // Soft delete Lab Service
-router.delete('/:labServiceId', deleteLabService);
+router.delete('/:labServiceId', requireRole(['admin']), deleteLabService);
 
 export default router;
