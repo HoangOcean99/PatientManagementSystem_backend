@@ -32,7 +32,7 @@ import dashboardRouter from './routes/dashboardRoutes.js';
 const app = express();
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: ['http://localhost:5173', 'https://medschedule.haiduong.name.vn'],
     credentials: true,
 }));
 
