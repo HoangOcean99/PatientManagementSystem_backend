@@ -61,6 +61,15 @@ export const updateInvoiceStatus = async (invoiceId, status, paymentMethod) => {
         .eq('invoice_id', invoiceId)
         .select()
         .single();
+};
+
+export const markInvoiceAsPaid = async (invoiceId) => {
+    const { data, error } = await supabase
+        .from('Invoices')
+        .update({ payment_status: 'paid', payment_method: 'transfer' })
+        .eq('invoice_id', invoiceId)
+        .select()
+        .single();
 
     if (error) throw new AppError(error.message, 500);
     return data;
