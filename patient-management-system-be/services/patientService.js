@@ -1,6 +1,8 @@
 import { get } from "mongoose";
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
+import { updateAvatar } from "./userService.js";
+
 export const createPatient = async (payload) => {
   const { patient_id, dob, gender, address, allergies, medical_history_summary } = payload;
 
@@ -112,7 +114,6 @@ export const getPatientById = async (patientId) => {
 };
 
 export const getPatientList = async ({
-  keyword,
   gender,
   status,
   page,
@@ -196,12 +197,12 @@ export const getPatientList = async ({
     },
   };
 };
-export const updatePatient = async (patientId, payload) => {
-  // 1. Check patient exists
+export const updatePatient = async (payload, avatarFile) => {
+  const { patient_id } = payload;
   const { data: existing, error: findError } = await supabase
     .from("Patients")
     .select("*")
-    .eq("patient_id", patientId)
+    .eq("patient_id", patient_id)
     .single();
 
   if (findError || !existing) {
@@ -220,7 +221,7 @@ export const updatePatient = async (patientId, payload) => {
     const { error: updatePatientError } = await supabase
       .from("Patients")
       .update(patientPayload)
-      .eq("patient_id", patientId);
+      .eq("patient_id", patient_id);
 
     if (updatePatientError) {
       throw new AppError(updatePatientError.message, 500);
@@ -239,18 +240,20 @@ export const updatePatient = async (patientId, payload) => {
     const { error: updateUserError } = await supabase
       .from("Users")
       .update(userPayload)
-      .eq("user_id", patientId);
+      .eq("user_id", patient_id);
 
     if (updateUserError) {
       throw new AppError(updateUserError.message, 500);
     }
   }
 
+  await updateAvatar({ ...payload, user_id: patient_id }, avatarFile);
+
   // 4. Fetch updated data
   const { data: fullData, error: fetchError } = await supabase
     .from("Patients")
     .select(PATIENT_SELECT_QUERY)
-    .eq("patient_id", patientId)
+    .eq("patient_id", patient_id)
     .single();
 
   if (fetchError) {

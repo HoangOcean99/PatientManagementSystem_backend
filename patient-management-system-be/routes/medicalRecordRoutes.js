@@ -18,7 +18,7 @@ router.post('/complete', completeExamination); // Hoàn thành khám (khoá reco
 // 2. Querying APIs
 router.get('/detail/:recordId', getMedicalRecordById);
 router.get('/appointment/:appointmentId', getMedicalRecordByAppointment);
-router.get('/patient/:patientId', getMedicalRecordsByPatient);  // Xem toàn bộ lịch sử bệnh án
+router.get('/patient/:patientId', requireAuth, getMedicalRecordsByPatient);  // Xem toàn bộ lịch sử bệnh án
 
 // 3. Update API
 router.patch('/update/:recordId', updateMedicalRecord);
