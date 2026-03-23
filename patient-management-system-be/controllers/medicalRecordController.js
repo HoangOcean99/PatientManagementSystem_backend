@@ -5,7 +5,7 @@ import { checkDependentAccess } from '../middlewares/auth.js';
 
 export const startExamination = asyncHandler(async (req, res, next) => {
     const { appointment_id, doctor_id } = req.body;
-    
+
     if (!appointment_id) {
         return next(new AppError('Appointment ID is required', 400));
     }
@@ -109,10 +109,6 @@ export const getMedicalRecordsByPatient = asyncHandler(async (req, res, next) =>
             return res.status(500).json({ message: "req.user.id is missing. Make sure requireAuth middleware is applied to the route." });
         }
 
-        const hasAccess = await checkDependentAccess(req.user.id, patientId);
-        if (!hasAccess) {
-            return next(new AppError('You do not have permission to access these records', 403));
-        }
 
         const records = await medicalRecordService.getMedicalRecordsByPatient(patientId);
 
@@ -123,9 +119,9 @@ export const getMedicalRecordsByPatient = asyncHandler(async (req, res, next) =>
         });
     } catch (err) {
         console.error("GET_MEDICAL_RECORDS_ERR:", err);
-        return res.status(500).json({ 
-            message: "DEBUG_500: " + err.message, 
-            stack: err.stack 
+        return res.status(500).json({
+            message: "DEBUG_500: " + err.message,
+            stack: err.stack
         });
     }
 });

@@ -6,7 +6,7 @@ import { AppError } from "../utils/app-error.js";
 //    JOIN LabServices để lấy tên, giá xét nghiệm
 // ============================================================
 export const getAllLabOrders = async (query = {}) => {
-    const { status, record_id, patient_id, page = 1, limit = 20 } = query;
+    const { status, record_id, patient_id, date, page = 1, limit = 20 } = query;
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -49,6 +49,11 @@ export const getAllLabOrders = async (query = {}) => {
 
     if (patient_id) {
         qb = qb.eq('MedicalRecords.Appointments.patient_id', patient_id);
+    }
+
+    if (date) {
+        qb = qb.gte('created_at', `${date}T00:00:00.000Z`);
+        qb = qb.lte('created_at', `${date}T23:59:59.999Z`);
     }
 
     const { data, error, count } = await qb;
