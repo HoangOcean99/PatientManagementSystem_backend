@@ -112,7 +112,6 @@ export const getPatientById = async (patientId) => {
 };
 
 export const getPatientList = async ({
-  keyword,
   gender,
   status,
   page,
