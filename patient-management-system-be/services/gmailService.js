@@ -213,7 +213,7 @@ export const sendInvoiceEmail = async (invoiceData) => {
     const totalAmount = invoiceData.total_amount || 0;
     const depositPaid = invoiceData.Appointments?.deposit_paid || 0;
     const remaining = totalAmount - depositPaid;
-    const invoiceIdShort = invoiceData.invoice_id.substring(0,8).toUpperCase();
+    const invoiceIdShort = invoiceData.invoice_id.substring(0, 8).toUpperCase();
 
     const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 
@@ -287,4 +287,55 @@ export const sendInvoiceEmail = async (invoiceData) => {
     `;
 
     await sendMail(email, `[MedSchedule] Biên lai thanh toán #${invoiceIdShort}`, htmlContent);
-}; 
+};
+
+// ── Send Follow-Up Reminder Email ──
+export const sendFollowUpReminder = async ({ email, patientName, doctorName, departmentName, followUpDate }) => {
+    if (!email) throw new AppError('Patient email is required', 400);
+    if (!followUpDate) throw new AppError('Follow-up date is required', 400);
+
+    // Format date to Vietnamese locale
+    const formattedDate = new Date(followUpDate).toLocaleDateString('vi-VN', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+
+    const htmlContent = `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #f0f0f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="background-color: #0284c7; padding: 30px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px; letter-spacing: 1px;">MedSchedule</h1>
+            <p style="color: #e0f2fe; margin-top: 5px; font-size: 14px;">Nhắc nhở lịch tái khám</p>
+        </div>
+        
+        <div style="padding: 40px 30px; color: #334155; line-height: 1.6;">
+            <h2 style="color: #0f172a; font-size: 20px; margin-bottom: 20px; text-align: center;">📋 Thông báo lịch tái khám</h2>
+            
+            <p>Xin chào <b>${patientName || 'Quý khách'}</b>,</p>
+            <p>Bạn có lịch yêu cầu <b>khám lại</b> theo chỉ định của bác sĩ. Vui lòng sắp xếp thời gian để đến khám đúng hẹn.</p>
+            
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; border-left: 4px solid #0284c7; margin: 25px 0;">
+                <p style="margin: 5px 0; font-size: 16px;"><b>📅 Ngày tái khám:</b> ${formattedDate}</p>
+                ${departmentName ? `<p style="margin: 5px 0; font-size: 16px;"><b>🏥 Khoa:</b> ${departmentName}</p>` : ''}
+                ${doctorName ? `<p style="margin: 5px 0; font-size: 16px;"><b>👨‍⚕️ Bác sĩ yêu cầu:</b> ${doctorName}</p>` : ''}
+            
+            </div>
+            
+            <p style="font-size: 14px; color: #64748b;">
+                Vui lòng đăng nhập hệ thống MedSchedule để đặt lịch hẹn tái khám. <br>
+                Nếu cần hỗ trợ, vui lòng liên hệ hotline của phòng khám.
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 30px 0;">
+            
+            <div style="text-align: center;">
+                <p style="font-size: 12px; color: #94a3b8; margin: 0;">© 2026 MedSchedule. Tất cả quyền được bảo lưu.</p>
+                <p style="font-size: 12px; color: #94a3b8; margin: 5px 0 0;">Đây là email tự động, vui lòng không phản hồi.</p>
+            </div>
+        </div>
+    </div>
+    `;
+
+    await sendMail(email, `[MedSchedule] Nhắc nhở lịch tái khám - ${formattedDate}`, htmlContent);
+};

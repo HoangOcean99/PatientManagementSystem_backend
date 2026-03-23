@@ -125,3 +125,19 @@ export const getMedicalRecordsByPatient = asyncHandler(async (req, res, next) =>
         });
     }
 });
+
+export const sendFollowUpReminder = asyncHandler(async (req, res, next) => {
+    const { patient_id, doctor_id, follow_up_date } = req.body;
+
+    if (!patient_id || !doctor_id || !follow_up_date) {
+        return next(new AppError('patient_id, doctor_id and follow_up_date are required', 400));
+    }
+
+    const result = await medicalRecordService.sendFollowUpReminder(patient_id, doctor_id, follow_up_date);
+
+    res.status(200).json({
+        status: 'success',
+        message: result.message
+    });
+});
+

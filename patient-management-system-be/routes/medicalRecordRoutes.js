@@ -5,7 +5,8 @@ import {
     getMedicalRecordById,
     getMedicalRecordByAppointment,
     getMedicalRecordsByPatient,
-    updateMedicalRecord
+    updateMedicalRecord,
+    sendFollowUpReminder
 } from '../controllers/medicalRecordController.js';
 import { requireAuth } from '../middlewares/auth.js';
 
@@ -22,5 +23,8 @@ router.get('/patient/:patientId', requireAuth, getMedicalRecordsByPatient);  // 
 
 // 3. Update API
 router.patch('/update/:recordId', updateMedicalRecord);
+
+// 4. Send Email Notifications
+router.post('/send-followup-reminder', sendFollowUpReminder);
 
 export default router;

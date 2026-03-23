@@ -1,5 +1,8 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
+import * as patientService from "./patientService.js";
+import * as doctorService from "./doctorService.js";
+import * as gmailService from "./gmailService.js";
 
 // ============================================================
 // HELPER: Smart Sync cho Prescriptions
@@ -355,4 +358,34 @@ export const completeExamination = async (recordId, doctorId) => {
     if (updateApptError) throw new AppError(updateApptError.message, 500);
 
     return { message: 'Examination completed successfully' };
+};
+
+// ============================================================
+// 5. Gửi email nhắc nhở tái khám
+// ============================================================
+export const sendFollowUpReminder = async (patientId, doctorId, followUpDate) => {
+    // Lấy thông tin bệnh nhân từ patientService
+    const patient = await patientService.getPatientById(patientId);
+    const email = patient.Users?.email;
+    const patientName = patient.Users?.full_name;
+
+    if (!email) {
+        throw new AppError('Patient does not have an email address', 400);
+    }
+
+    // Lấy thông tin bác sĩ + khoa từ doctorService
+    const doctor = await doctorService.getDoctorById(doctorId);
+    const doctorName = doctor.Users?.full_name;
+    const departmentName = doctor.Departments?.name;
+
+    // Gửi email qua gmailService
+    await gmailService.sendFollowUpReminder({
+        email,
+        patientName,
+        doctorName,
+        departmentName,
+        followUpDate,
+    });
+
+    return { message: 'Follow-up reminder email sent successfully' };
 };
