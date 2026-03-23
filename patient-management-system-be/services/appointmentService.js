@@ -454,7 +454,7 @@ export const getTodayCheckedInAppointments = async () => {
       created_at,
       Patients ( patient_id, Users ( full_name, avatar_url ) ),
       Doctors ( doctor_id, Users ( full_name, email ) ),
-      ClinicServices ( name, Departments ( name ) ),
+      ClinicServices ( name, Departments ( department_id, name ) ),
       DoctorSlots!inner ( start_time, end_time, slot_date ) 
     `)
     .in('status', ['checked_in', 'assigned'])

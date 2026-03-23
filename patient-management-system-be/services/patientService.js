@@ -16,7 +16,6 @@ export const createPatient = async (payload) => {
 };
 
 export const getPatientList = async ({
-  keyword,
   gender,
   status,
   page,
