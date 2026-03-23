@@ -68,7 +68,7 @@ export const addDependent = async (parentUserId, dependentData) => {
         .insert([{
             parent_user_id: parentUserId,
             child_user_id: newUserId,
-            relationship: relationship || "child",
+            relationship: ["father", "mother", "guardian", "other"].includes((relationship || "").toLowerCase()) ? relationship.toLowerCase() : "other",
             can_manage: true
         }])
         .select(`
@@ -214,9 +214,10 @@ export const updateDependent = async (parentUserId, relationshipId, updateData) 
 
     // Update relationship type if provided
     if (relationship) {
+        const validRel = ["father", "mother", "guardian", "other"].includes(relationship.toLowerCase()) ? relationship.toLowerCase() : "other";
         const { error: relErr } = await supabase
             .from("FamilyRelationships")
-            .update({ relationship })
+            .update({ relationship: validRel })
             .eq("relationship_id", relationshipId);
 
         if (relErr) throw new AppError(`Error updating relationship: ${relErr.message}`, 500);
@@ -315,7 +316,7 @@ export const linkByShareCode = async (parentUserId, shareCode, relationship) => 
         .insert([{
             parent_user_id: parentUserId,
             child_user_id: childUserId,
-            relationship: relationship || "guardian",
+            relationship: ["father", "mother", "guardian", "other"].includes((relationship || "").toLowerCase()) ? relationship.toLowerCase() : "guardian",
             can_manage: true
         }])
         .select(`
@@ -385,7 +386,7 @@ export const inviteByEmail = async (parentUserId, targetEmail, relationship) => 
     emailInvites.set(code, {
         parentUserId,
         childUserId: childUser.user_id,
-        relationship: relationship || "guardian",
+        relationship: ["father", "mother", "guardian", "other"].includes((relationship || "").toLowerCase()) ? relationship.toLowerCase() : "guardian",
         expiresAt,
     });
 
@@ -399,7 +400,7 @@ export const inviteByEmail = async (parentUserId, targetEmail, relationship) => 
 };
 
 // ── Accept email invitation ──
-export const acceptEmailInvitation = async (childUserId, invitationCode) => {
+export const acceptEmailInvitation = async (userId, invitationCode) => {
     cleanExpiredCodes();
 
     const entry = emailInvites.get(invitationCode);
@@ -407,18 +408,18 @@ export const acceptEmailInvitation = async (childUserId, invitationCode) => {
         throw new AppError("Invalid or expired invitation code", 400);
     }
 
-    if (entry.childUserId !== childUserId) {
+    if (entry.childUserId !== userId && entry.parentUserId !== userId) {
         throw new AppError("This invitation code is not for your account", 403);
     }
 
-    const { parentUserId, relationship } = entry;
+    const { parentUserId, relationship, childUserId: entryChildUserId } = entry;
 
     // Check if relationship already exists
     const { data: existing } = await supabase
         .from("FamilyRelationships")
         .select("relationship_id")
         .eq("parent_user_id", parentUserId)
-        .eq("child_user_id", childUserId)
+        .eq("child_user_id", entryChildUserId)
         .single();
 
     if (existing) {
@@ -431,8 +432,8 @@ export const acceptEmailInvitation = async (childUserId, invitationCode) => {
         .from("FamilyRelationships")
         .insert([{
             parent_user_id: parentUserId,
-            child_user_id: childUserId,
-            relationship: relationship || "guardian",
+            child_user_id: entryChildUserId,
+            relationship: ["father", "mother", "guardian", "other"].includes((relationship || "").toLowerCase()) ? relationship.toLowerCase() : "guardian",
             can_manage: true
         }])
         .select(`
@@ -454,3 +455,27 @@ export const acceptEmailInvitation = async (childUserId, invitationCode) => {
 
     return relation;
 };
+
+// ── Get parent info of a child ──
+export const getParentOfChild = async (childUserId) => {
+    const { data, error } = await supabase
+        .from("FamilyRelationships")
+        .select(`
+            parent_user_id,
+            Users!FamilyRelationships_parent_user_id_fkey (
+                full_name,
+                email
+            )
+        `)
+        .eq("child_user_id", childUserId)
+        .limit(1)
+        .single();
+
+    if (error || !data) return null;
+    return {
+        parent_user_id: data.parent_user_id,
+        email: data.Users?.email,
+        full_name: data.Users?.full_name
+    };
+};
+

@@ -130,12 +130,12 @@ export const inviteByEmail = asyncHandler(async (req, res) => {
 
 // POST /under-my-care/accept-invite — Chấp nhận mã mời email
 export const acceptEmailInvitation = asyncHandler(async (req, res) => {
-    const childUserId = req.user.id;
+    const userId = req.user.id;
     const { invitation_code } = req.body;
 
     if (!invitation_code) throw new AppError("invitation_code is required", 400);
 
-    const data = await underMyCareService.acceptEmailInvitation(childUserId, invitation_code);
+    const data = await underMyCareService.acceptEmailInvitation(userId, invitation_code);
 
     res.status(200).json({
         status: "success",
