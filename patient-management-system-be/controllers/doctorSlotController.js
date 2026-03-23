@@ -62,9 +62,8 @@ export const getAvailableDoctorSlotsByDoctorIdAndExactDate = async (req, res, ne
 
 export const createDoctorSlot = async (req, res, next) => {
     try {
-        const { doctor_id, slot_date, start_time, end_time } = req.body; // Cần dòng này!
+        const { doctor_id, slot_date, start_time, end_time } = req.body;
 
-        // Cậu đã có logic check bác sĩ ở đây rồi thì cứ giữ nguyên
         const doctor = await doctorService.getDoctorById(doctor_id);
         if (!doctor) throw new AppError("Bác sĩ không tồn tại", 404);
 
