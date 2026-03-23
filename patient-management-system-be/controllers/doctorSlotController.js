@@ -1,5 +1,6 @@
 import * as doctorSlotService from "../services/doctorSlotService.js";
 import * as doctorService from "../services/doctorService.js";
+import asyncHandler from '../utils/async-handler.js';
 import { AppError } from "../utils/app-error.js";
 
 

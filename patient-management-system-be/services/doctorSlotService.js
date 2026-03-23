@@ -1,5 +1,6 @@
 import { supabase } from "../supabaseClient.js";
 import { AppError } from "../utils/app-error.js";
+import asyncHandler from '../utils/async-handler.js';
 import * as doctorService from "../services/doctorService.js";
 
 
@@ -345,6 +346,72 @@ export const createSlot = async (slotData) => {
   return data;
 };
 
+/**
+ * Tạo nhiều slots cùng lúc (bulk create)
+ */
+export const createBulkSlots = async (slotsData) => {
+  const { doctor_id, slot_date, slots } = slotsData;
+
+  // Validate doctor tồn tại
+  const { data: doctor, error: doctorError } = await supabase
+    .from('Doctors')
+    .select('doctor_id')
+    .eq('doctor_id', doctor_id)
+    .single();
+
+  if (doctorError || !doctor) {
+    throw new AppError('Doctor not found', 404);
+  }
+
+  // Validate từng slot
+  for (const slot of slots) {
+    if (parseTime(slot.start_time) >= parseTime(slot.end_time)) {
+      throw new AppError(`Start time (${slot.start_time}) must be before end time (${slot.end_time})`, 400);
+    }
+  }
+
+  // Kiểm tra overlap giữa các slot mới với nhau
+  for (let i = 0; i < slots.length; i++) {
+    for (let j = i + 1; j < slots.length; j++) {
+      if (parseTime(slots[i].start_time) < parseTime(slots[j].end_time) && parseTime(slots[i].end_time) > parseTime(slots[j].start_time)) {
+        throw new AppError(`Slots overlap: ${slots[i].start_time}-${slots[i].end_time} and ${slots[j].start_time}-${slots[j].end_time}`, 400);
+      }
+    }
+  }
+
+  // Kiểm tra overlap với slots đã tồn tại
+  const { data: existingSlots } = await supabase
+    .from('DoctorSlots')
+    .select('slot_id, start_time, end_time')
+    .eq('doctor_id', doctor_id)
+    .eq('slot_date', slot_date);
+
+  if (existingSlots && existingSlots.length > 0) {
+    for (const newSlot of slots) {
+      const hasOverlap = existingSlots.some(existing =>
+        (parseTime(newSlot.start_time) < parseTime(existing.end_time) && parseTime(newSlot.end_time) > parseTime(existing.start_time))
+      );
+      if (hasOverlap) {
+        throw new AppError(`Slot ${newSlot.start_time}-${newSlot.end_time} overlaps with an existing slot`, 409);
+      }
+    }
+  }
+
+  const insertData = slots.map(slot => ({
+    doctor_id,
+    slot_date,
+    start_time: slot.start_time,
+    end_time: slot.end_time,
+  }));
+
+  const { data, error } = await supabase
+    .from('DoctorSlots')
+    .insert(insertData)
+    .select();
+
+  if (error) throw new AppError(error.message, 500);
+  return data;
+};
 
 /**
  * Cập nhật slot (chỉ cho phép sửa khi slot chưa được book)
@@ -430,5 +497,32 @@ export const deleteSlot = async (slotId) => {
   if (error) throw new AppError(error.message, 500);
   return true;
 };
+
+/**
+ * Xoá nhiều slots cùng lúc (bulk delete)
+ */
+export const deleteBulkSlots = async (slotIds) => {
+  // Kiểm tra xem có slot nào đã book không
+  const { data: bookedSlots, error: checkError } = await supabase
+    .from('DoctorSlots')
+    .select('slot_id')
+    .in('slot_id', slotIds)
+    .eq('is_booked', true);
+
+  if (checkError) throw new AppError(checkError.message, 500);
+
+  if (bookedSlots && bookedSlots.length > 0) {
+    throw new AppError(`Cannot delete ${bookedSlots.length} booked slot(s). Please cancel the appointments first.`, 400);
+  }
+
+  const { error } = await supabase
+    .from('DoctorSlots')
+    .delete()
+    .in('slot_id', slotIds);
+
+  if (error) throw new AppError(error.message, 500);
+  return true;
+};
+
 
 
