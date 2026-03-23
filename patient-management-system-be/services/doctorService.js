@@ -66,7 +66,6 @@ export const getAllDoctors = async () => {
 // };
 
 export const getDoctorById = async (doctorId) => {
-  console.log('id1', doctorId)
 
   const { data, error } = await supabase
     .from('Users')
@@ -277,7 +276,6 @@ export const updateDoctorInfo = async (updateData) => {
 
   if (Object.keys(doctorUpdates).length > 0) {
     doctorUpdates.doctor_id = doctor_id;
-    console.log(doctorUpdates);
     updatePromises.push(
       supabase.from("Doctors").upsert(doctorUpdates, { onConflict: 'doctor_id' }),
     );

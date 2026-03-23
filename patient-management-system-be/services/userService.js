@@ -211,15 +211,11 @@ export const updateUserRole = async (userId, newRole) => {
 
   if (oldRole === newRole) return user;
 
-  console.log('old', oldRole)
-  console.log('new', newRole)
   if (oldRole == "patient") {
     const { error: temp } = await supabase.from("Patients").delete().eq("patient_id", userId);
-    if (temp) console.log(temp)
 
   } else if (oldRole == "doctor") {
     const { error: temp } = await supabase.from("Doctors").delete().eq("doctor_id", userId);
-    if (temp) console.log(temp)
   }
 
   const { error: updateError } = await supabase

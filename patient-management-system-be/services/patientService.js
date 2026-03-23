@@ -206,7 +206,6 @@ export const updatePatient = async (payload, avatarFile) => {
     .single();
 
   if (findError || !existing) {
-    console.log(findError);
     throw new AppError("Patient not found", 404);
   }
 

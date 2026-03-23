@@ -65,7 +65,6 @@ export const getAvailableDoctorSlotsByDoctorIdAndExactDate = async (req, res, ne
 export const getAvailableDoctorSlots = async (req, res, next) => {
     try {
         const department_id = req.body;
-        console.log("Dữ liệu nhận được:", { department_id });
         if (!department_id) {
             return res.status(400).json({ message: "Thiếu thông tin department_id" });
         }

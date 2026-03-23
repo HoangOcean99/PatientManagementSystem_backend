@@ -21,7 +21,6 @@ export const getPendingDeposits = async () => {
         .order('created_at', { ascending: false });
 
     if (error) throw new AppError(error.message, 500);
-    console.log(data);
     const pendingDeposits = data.filter(appt => (appt.deposit_paid || 0) < appt.deposit_required);
     return pendingDeposits;
 };
@@ -97,7 +96,7 @@ export const confirmDeposit = async (appointmentId, amount) => {
                         targetEmail = parentInfo.email;
                     }
                 }
-                
+
                 if (targetEmail) {
                     await sendAppointmentConfirmation(targetEmail, data);
                 }

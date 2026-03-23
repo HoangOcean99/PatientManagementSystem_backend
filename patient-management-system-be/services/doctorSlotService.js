@@ -166,7 +166,7 @@ export const getAvailableDoctorSlots = async (department_id) => {
         .eq('Doctors.department_id', department_id.department_id)
         .order('start_time', { ascending: true });
 
-    if (error) { console.log(error); throw new AppError(error.message, 500); }
+    if (error) { throw new AppError(error.message, 500); }
     if (!slots || slots.length === 0) return [];
 
     const now = new Date();

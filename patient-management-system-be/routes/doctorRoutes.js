@@ -10,7 +10,7 @@ import { requireRole } from '../middlewares/auth.js';
 const doctorRouter = express.Router();
 
 doctorRouter.post('/setup/:doctorId', requireRole(['admin']), createDoctorProfileValidator, createDoctorProfile);
-doctorRouter.put('/update', requireRole(['admin', 'receptionist']), updateDoctorValidator, upload.single("avatar"), updateDoctor);
+doctorRouter.put('/update', requireRole(['admin', 'receptionist', 'doctor', 'lab']), updateDoctorValidator, upload.single("avatar"), updateDoctor);
 doctorRouter.put('/update-info', requireRole(['admin', 'receptionist']), updateDoctorInfo);
 doctorRouter.get('/appointments/:doctorId', getAppointmentsByDoctorId);
 doctorRouter.get('/patient/:patientId', getPatientById);

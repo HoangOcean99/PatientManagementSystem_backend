@@ -9,7 +9,7 @@ import { requireRole } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-router.use(requireRole(['doctor', 'admin']));
+router.use(requireRole(['doctor', 'admin', 'receptionist', 'lab']));
 
 // 0. Lấy tất cả xét nghiệm (filter + phân trang)
 router.get('/', getAllLabOrders);

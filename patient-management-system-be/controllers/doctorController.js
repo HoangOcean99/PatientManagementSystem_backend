@@ -47,7 +47,6 @@ export const searchDoctors = asyncHandler(async (req, res, next) => {
 export const updateDoctor = asyncHandler(async (req, res, next) => {
     const updateData = req.body;
     const avatarFile = req.file || null;
-
     const updatedDoctor = await doctorService.updateDoctor(updateData, avatarFile);
 
     if (!updatedDoctor) {
