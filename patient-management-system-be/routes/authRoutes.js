@@ -1,6 +1,6 @@
 import express from 'express';
 import { requestForgetPassword, requestRegister, resetPassword, signOut, syncUserGoogle, verifyAndCreateUser, verifyResetOtp } from '../controllers/authController.js';
-import { requireAuth, requireRole} from '../middlewares/auth.js';
+import { requireAuth } from '../middlewares/auth.js';
 
 const authRoutes = express.Router();
 authRoutes.post('/request-register', requestRegister);

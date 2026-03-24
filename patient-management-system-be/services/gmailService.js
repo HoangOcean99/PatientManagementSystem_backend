@@ -1,8 +1,8 @@
 import { AppError } from "../utils/app-error.js";
 import ics from 'ics';
 import { sendMail, sendMailWithIcal } from "../utils/mailer.js";
+import { supabase } from "../supabaseClient.js";
 
-const otpStore = new Map();
 const otpTemplate = (otp, purpose = "resetPassword") => {
     const configs = {
         resetPassword: {
@@ -66,28 +66,49 @@ export const sendOtp = async (email, purpose) => {
     if (!email) throw new AppError("Email is required", 500);
 
     const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-    otpStore.set(email, {
-        otp,
-        expire: Date.now() + 5 * 60 * 1000,
-    });
-    // Trường hợp 1: Quên mật khẩu
+    // Xóa OTP cũ (nếu có) cho email + purpose này
+    await supabase
+        .from('otp_store')
+        .delete()
+        .eq('email', email)
+        .eq('purpose', purpose);
+
+    // Lưu OTP mới vào DB
+    const { error } = await supabase
+        .from('otp_store')
+        .insert({ email, otp, purpose, expires_at: expiresAt });
+
+    if (error) throw new AppError("Failed to store OTP", 500);
+
     const htmlContent = otpTemplate(otp, purpose);
-    const subject = purpose === 'verifyEmail' ? "[MedSchedule] Xác thực tài khoản mới" : "[MedSchedule] Đặt lại mật khẩu của bạn"
+    const subject = purpose === 'verifyEmail'
+        ? "[MedSchedule] Xác thực tài khoản mới"
+        : "[MedSchedule] Đặt lại mật khẩu của bạn";
     await sendMail(email, subject, htmlContent);
 };
 
 export const verifyOtp = async (email, otp) => {
-    const data = otpStore.get(email);
-    if (!data) throw new AppError("OTP not found", 404);
-    if (Date.now() > data.expire) {
-        otpStore.delete(email);
+    const { data, error } = await supabase
+        .from('otp_store')
+        .select('*')
+        .eq('email', email)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (error || !data) throw new AppError("OTP not found", 404);
+
+    if (new Date(data.expires_at) < new Date()) {
+        await supabase.from('otp_store').delete().eq('id', data.id);
         throw new AppError("OTP expired", 410);
     }
-    if (data.otp !== otp) {
-        throw new AppError("Invalid OTP", 400);
-    }
-    otpStore.delete(email);
+
+    if (data.otp !== otp) throw new AppError("Invalid OTP", 400);
+
+    // Xóa OTP sau khi xác thực thành công
+    await supabase.from('otp_store').delete().eq('id', data.id);
     return true;
 };
 
