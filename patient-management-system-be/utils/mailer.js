@@ -1,38 +1,52 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.sendgrid.net",
+    port: 587,
+    secure: false,
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: "apikey",
+        pass: process.env.SENDGRID_API_KEY,
+    },
+    tls: {
+        rejectUnauthorized: false,
     },
 });
 
 export const sendMail = async (to, subject, html) => {
-    await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to,
-        subject,
-        html,
-    });
+    try {
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to,
+            subject,
+            html,
+        });
+    } catch (err) {
+        console.error("SendMail Error:", err);
+        throw err;
+    }
 };
 
 export const sendMailWithIcal = async (to, subject, html, icalContent = null) => {
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: to,
-        subject: subject,
-        html: html,
-    };
-
-    // Nếu có truyền file lịch (icalContent) thì đính kèm vào mail
-    if (icalContent) {
-        mailOptions.icalEvent = {
-            filename: 'invite.ics',
-            method: 'request',
-            content: icalContent
+    try {
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to,
+            subject,
+            html,
         };
-    }
 
-    await transporter.sendMail(mailOptions);
+        if (icalContent) {
+            mailOptions.icalEvent = {
+                filename: "invite.ics",
+                method: "request",
+                content: icalContent,
+            };
+        }
+
+        await transporter.sendMail(mailOptions);
+    } catch (err) {
+        console.error("SendMailWithIcal Error:", err);
+        throw err;
+    }
 };

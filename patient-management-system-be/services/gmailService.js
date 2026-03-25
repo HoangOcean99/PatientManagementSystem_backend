@@ -68,7 +68,6 @@ export const sendOtp = async (email, purpose) => {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-    // Xóa OTP cũ (nếu có) cho email + purpose này
     await supabase
         .from('otp_store')
         .delete()
