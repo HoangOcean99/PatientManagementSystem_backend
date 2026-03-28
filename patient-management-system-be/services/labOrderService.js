@@ -197,7 +197,7 @@ export const getLabOrderById = async (labOrderId) => {
 // 3. Cập nhật lab order (BS xét nghiệm cập nhật kết quả)
 //    - Cho phép update: status, result_summary, result_file_url
 // ============================================================
-export const updateLabOrder = async (labOrderId, updateData) => {
+export const updateLabOrder = async (labOrderId, updateData, resultFile = null) => {
     // Chỉ cho phép update các field hợp lệ
     const allowedFields = ['status', 'result_summary', 'result_file_url'];
     const sanitized = {};
@@ -207,8 +207,33 @@ export const updateLabOrder = async (labOrderId, updateData) => {
         }
     }
 
+    // Handle file upload if provided (to resultLab bucket)
+    if (resultFile) {
+        const fileExt = resultFile.originalname.split('.').pop();
+        const fileName = `${labOrderId}_${Date.now()}.${fileExt}`;
+        const filePath = `results/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('resultLab')
+            .upload(filePath, resultFile.buffer, {
+                contentType: resultFile.mimetype,
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (uploadError) {
+            throw new AppError(`File upload failed: ${uploadError.message}`, 500);
+        }
+
+        const { data: urlData } = supabase.storage
+            .from('resultLab')
+            .getPublicUrl(filePath);
+
+        sanitized.result_file_url = urlData.publicUrl;
+    }
+
     if (Object.keys(sanitized).length === 0) {
-        throw new AppError('No valid fields to update. Allowed: status, result_summary, result_file_url', 400);
+        throw new AppError('No valid fields to update. Allowed: status, result_summary, result_file_url, or a file upload', 400);
     }
 
     // Validate status transition: ordered → processing → completed

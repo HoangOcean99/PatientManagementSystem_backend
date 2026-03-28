@@ -68,7 +68,7 @@ export const updateLabOrder = asyncHandler(async (req, res, next) => {
         return next(new AppError('Lab order ID is required', 400));
     }
 
-    const data = await labOrderService.updateLabOrder(labOrderId, updateData);
+    const data = await labOrderService.updateLabOrder(labOrderId, updateData, req.file);
 
     res.status(200).json({
         status: 'success',

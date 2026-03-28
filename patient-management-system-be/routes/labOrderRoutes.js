@@ -6,6 +6,7 @@ import {
     updateLabOrder
 } from '../controllers/labOrderController.js';
 import { requireRole } from '../middlewares/auth.js';
+import { upload } from '../middlewares/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -19,6 +20,6 @@ router.post('/', createLabOrders);
 
 // 2. BS xét nghiệm — chi tiết + cập nhật 1 xét nghiệm
 router.get('/:labOrderId', getLabOrderById);
-router.patch('/:labOrderId', updateLabOrder);
+router.patch('/:labOrderId', upload.single('result_file'), updateLabOrder);
 
 export default router;
