@@ -9,6 +9,7 @@ import {
   getUserByIdAndRole,
   updateUserByRole,
   updateUserRole,
+  updateUserStatus,
 } from "../controllers/userController.js";
 import { upload } from "../middlewares/uploadMiddleware.js";
 import { requireRole } from "../middlewares/auth.js";
@@ -26,5 +27,6 @@ userRouter.get("/role/:role/:id", requireRole(['admin']), getUserByIdAndRole);
 userRouter.put("/role/:role/:id", requireRole(['admin']), upload.single("avatar"), updateUserByRole);
 
 userRouter.put("/:id/role", requireRole(['admin']), updateUserRole);
+userRouter.put("/:id/status", requireRole(['admin']), updateUserStatus);
 
 export default userRouter;

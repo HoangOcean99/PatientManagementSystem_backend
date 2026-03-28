@@ -74,7 +74,6 @@ export const sendOtp = async (email, purpose) => {
         .eq('email', email)
         .eq('purpose', purpose);
 
-    // Lưu OTP mới vào DB
     const { error } = await supabase
         .from('otp_store')
         .insert({ email, otp, purpose, expires_at: expiresAt });
@@ -106,23 +105,18 @@ export const verifyOtp = async (email, otp) => {
 
     if (data.otp !== otp) throw new AppError("Invalid OTP", 400);
 
-    // Xóa OTP sau khi xác thực thành công
     await supabase.from('otp_store').delete().eq('id', data.id);
     return true;
 };
 
-// ... (code sendOtp, verifyOtp của cậu ở trên) ...
-
 export const sendAppointmentConfirmation = async (email, appointmentData) => {
-    // 1. Lấy dữ liệu trực tiếp từ object appointmentData (từ Controller truyền sang)
     const patientName = appointmentData.Patients.Users.full_name;
     const doctorName = appointmentData.Doctors.Users.full_name;
     const serviceName = appointmentData.ClinicServices.name;
-    const date = appointmentData.DoctorSlots.slot_date; // Định dạng "YYYY-MM-DD"
-    const startTime = appointmentData.DoctorSlots.start_time; // Định dạng "HH:mm:ss"
-    const endTime = appointmentData.DoctorSlots.end_time; // Định dạng "HH:mm:ss"
+    const date = appointmentData.DoctorSlots.slot_date;
+    const startTime = appointmentData.DoctorSlots.start_time;
+    const endTime = appointmentData.DoctorSlots.end_time;
 
-    // 2. Chuyển đổi chuỗi ngày giờ thành mảng số nguyên cho thư viện ics: [Năm, Tháng, Ngày, Giờ, Phút]
     const [year, month, day] = date.split('-').map(Number);
     const [startHour, startMinute] = startTime.split(':').map(Number);
     const [endHour, endMinute] = endTime.split(':').map(Number);

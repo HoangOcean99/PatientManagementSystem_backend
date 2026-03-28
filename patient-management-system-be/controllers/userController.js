@@ -185,3 +185,19 @@ export const updateUserRole = asyncHandler(async (req, res) => {
     data: updatedUser,
   });
 });
+
+export const updateUserStatus = asyncHandler(async (req, res) => {
+  const userId = req.params.id;
+  const { status } = req.body;
+
+  if (!userId) throw new AppError("User ID is required", 400);
+  if (!status) throw new AppError("Status is required", 400);
+
+  const updatedUser = await userServices.updateUserStatus(userId, status);
+
+  res.status(200).json({
+    success: true,
+    message: "User status updated successfully",
+    data: updatedUser,
+  });
+});

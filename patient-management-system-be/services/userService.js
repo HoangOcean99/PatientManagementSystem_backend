@@ -227,3 +227,15 @@ export const updateUserRole = async (userId, newRole) => {
 
   return { ...user, role: newRole };
 };
+
+export const updateUserStatus = async (userId, status) => {
+  const { data, error } = await supabase
+    .from("Users")
+    .update({ status })
+    .eq("user_id", userId)
+    .select()
+    .single();
+
+  if (error) throw new AppError(error.message, 400);
+  return data;
+};

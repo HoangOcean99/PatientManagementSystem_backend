@@ -122,12 +122,17 @@ export const syncUserGoogle = async (user) => {
 
     const { data, error } = await supabase
         .from('Users')
-        .select('role')
+        .select('role, status')
         .eq('user_id', user.id)
         .maybeSingle();
 
     if (error) {
         throw error;
+    }
+
+    // Check if user is inactive
+    if (data.status == 'inactive') {
+        throw new AppError("Tài khoản của bạn đã bị cấm", 403);
     }
 
     // Auto-create/upsert patient profile if the role is 'patient'

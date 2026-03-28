@@ -143,9 +143,9 @@ export const getPatientList = async ({
     .eq("role", "patient")
     .order("user_id", { ascending: false });
 
-  if (keyword) {
-    query = query.or(`full_name.ilike.%${keyword}%,phone_number.ilike.%${keyword}%`);
-  }
+  // if (keyword) {
+  //   query = query.or(`full_name.ilike.%${keyword}%,phone_number.ilike.%${keyword}%`);
+  // }
 
   if (gender) {
     query = query.eq("gender", gender);
