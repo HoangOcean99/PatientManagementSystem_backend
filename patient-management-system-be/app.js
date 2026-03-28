@@ -28,6 +28,7 @@ import invoiceRouter from './routes/invoiceRoutes.js';
 import accountantRouter from './routes/accountantRoutes.js';
 import labServiceRoutes from './routes/labServiceRoutes.js';
 import dashboardRouter from './routes/dashboardRoutes.js';
+import chatbotRouter from './routes/chatbotRoutes.js';
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.use('/clinic-services', clinicServicesRouter);
 app.use('/invoices', invoiceRouter);
 app.use('/accountant', accountantRouter);
 app.use('/dashboard', dashboardRouter);
+app.use('/chatbot', chatbotRouter);
 
 app.use(errorHandler);
 //console.table(listEndpoints(app));

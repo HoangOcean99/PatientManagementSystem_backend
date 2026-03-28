@@ -101,7 +101,7 @@ export const getDoctorById = async (doctorId) => {
     .single();
 
   if (error) throw new AppError(error.message, 500);
-  const docInfo = data.Doctors;
+  const docInfo = Array.isArray(data.Doctors) && data.Doctors.length > 0 ? data.Doctors[0] : {};
 
   return {
     doctor_id: data.user_id,
