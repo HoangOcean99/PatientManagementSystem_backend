@@ -45,7 +45,7 @@ export const updateMedicalRecord = asyncHandler(async (req, res, next) => {
 });
 
 export const completeExamination = asyncHandler(async (req, res, next) => {
-    const { record_id, doctor_id } = req.body;
+    const { record_id, doctor_id, invoiceData } = req.body;
 
     if (!record_id) {
         return next(new AppError('Record ID is required', 400));
@@ -55,11 +55,12 @@ export const completeExamination = asyncHandler(async (req, res, next) => {
         return next(new AppError('Doctor ID is required for authorization', 400));
     }
 
-    const result = await medicalRecordService.completeExamination(record_id, doctor_id);
+    const result = await medicalRecordService.completeExamination(record_id, doctor_id, invoiceData);
 
     res.status(200).json({
         status: 'success',
-        message: result.message
+        message: result.message,
+        data: result.invoice
     });
 });
 

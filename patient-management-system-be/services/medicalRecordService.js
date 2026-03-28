@@ -3,6 +3,7 @@ import { AppError } from "../utils/app-error.js";
 import * as patientService from "./patientService.js";
 import * as doctorService from "./doctorService.js";
 import * as gmailService from "./gmailService.js";
+import * as invoiceService from "./invoiceService.js";
 
 // ============================================================
 // HELPER: Smart Sync cho Prescriptions
@@ -326,7 +327,7 @@ export const updateMedicalRecord = async (recordId, updateData, doctorId) => {
 // ============================================================
 // 4. Hoàn thành khám
 // ============================================================
-export const completeExamination = async (recordId, doctorId) => {
+export const completeExamination = async (recordId, doctorId, invoiceData) => {
     const { data: record, error: recordError } = await supabase
         .from('MedicalRecords')
         .select('*, Appointments!appointment_id(status, doctor_id)')
@@ -357,7 +358,16 @@ export const completeExamination = async (recordId, doctorId) => {
 
     if (updateApptError) throw new AppError(updateApptError.message, 500);
 
-    return { message: 'Examination completed successfully' };
+    // Tạo hóa đơn nếu có dữ liệu truyền xuống
+    let invoice = null;
+    if (invoiceData) {
+        invoice = await invoiceService.createInvoice(invoiceData);
+    }
+
+    return { 
+        message: 'Examination completed successfully',
+        invoice: invoice 
+    };
 };
 
 // ============================================================
