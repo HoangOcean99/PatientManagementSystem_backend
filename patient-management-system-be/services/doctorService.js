@@ -101,14 +101,13 @@ export const getDoctorById = async (doctorId) => {
     .single();
 
   if (error) throw new AppError(error.message, 500);
-  const docInfo = Array.isArray(data.Doctors) && data.Doctors.length > 0 ? data.Doctors[0] : {};
 
   return {
     doctor_id: data.user_id,
-    department_id: docInfo.department_id || null,
-    room_id: docInfo.room_id || null,
-    specialization: docInfo.specialization || null,
-    bio: docInfo.bio || null,
+    department_id: data.Doctors.Departments.department_id || null,
+    room_id: data.Doctors.Rooms.room_id || null,
+    specialization: data.Doctors.specialization || null,
+    bio: data.Doctors.bio || null,
     Users: {
       user_id: data.user_id,
       full_name: data.full_name,
@@ -120,8 +119,8 @@ export const getDoctorById = async (doctorId) => {
       dob: data.dob,
       gender: data.gender
     },
-    Rooms: docInfo.Rooms || null,
-    Departments: docInfo.Departments || null
+    Rooms: data.Doctors.Rooms || null,
+    Departments: data.Doctors.Departments || null
   };
 };
 
