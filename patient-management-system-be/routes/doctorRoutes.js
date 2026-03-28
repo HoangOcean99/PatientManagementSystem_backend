@@ -11,12 +11,12 @@ const doctorRouter = express.Router();
 
 doctorRouter.post('/setup/:doctorId', requireRole(['admin']), createDoctorProfileValidator, createDoctorProfile);
 doctorRouter.put('/update', requireRole(['admin', 'receptionist', 'doctor', 'lab']), updateDoctorValidator, upload.single("avatar"), updateDoctor);
-doctorRouter.put('/update-info', requireRole(['admin', 'receptionist']), updateDoctorInfo);
+doctorRouter.put('/update-info', requireRole(['admin', 'receptionist', 'doctor', 'lab']), updateDoctorInfo);
 doctorRouter.get('/appointments/:doctorId', getAppointmentsByDoctorId);
 doctorRouter.get('/patient/:patientId', getPatientById);
 doctorRouter.get('/search', searchDoctors);
 doctorRouter.get('/detail/:doctorId', getDoctorById);
-doctorRouter.patch('/update/:doctorId', requireRole(['admin']), updateDoctorById);
+doctorRouter.patch('/update/:doctorId', requireRole(['admin', 'doctor', 'receptionist', 'lab']), updateDoctorById);
 doctorRouter.get('/get-doctors-by-department/:departmentId', getDoctorByDepartmentId);
 doctorRouter.post('/create', requireRole(['admin']), createDoctor);
 doctorRouter.delete('/delete/:doctorId', requireRole(['admin']), deleteDoctorById);
