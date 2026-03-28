@@ -68,6 +68,22 @@ export const resetPassword = asyncHandler(async (req, res) => {
     });
 });
 
+export const changePassword = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+        throw new AppError('Old password and new password are required', 400);
+    }
+
+    const data = await authService.changePassword(userId, oldPassword, newPassword);
+
+    res.status(200).json({
+        success: true,
+        data: data
+    });
+});
+
 export const signOut = asyncHandler(async (req, res) => {
     const data = await authService.signOut();
     res.status(200).json({

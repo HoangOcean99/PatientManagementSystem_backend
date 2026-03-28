@@ -62,6 +62,25 @@ export const cancelAppointment = asyncHandler(async (req, res) => {
   });
 })
 
+export const cancelAppointmentByStaff = asyncHandler(async (req, res) => {
+  const { appointment_id } = req.params;
+
+  const appointment = await appointmentService.cancelAppointmentByStaff(appointment_id);
+
+  // Gửi mail thông báo cho bệnh nhân
+  const patientEmail = appointment.Patients?.Users?.email;
+  if (patientEmail) {
+    // Tránh await để không làm chậm response cho user frontend
+    gmailService.sendAppointmentCancellation(patientEmail, appointment).catch(err => {
+      console.error("Gửi mail hủy lịch thất bại:", err);
+    });
+  }
+
+  return res.status(200).json({
+    message: "Hủy lịch hẹn bởi nhân viên thành công, đã gửi email thông báo cho bệnh nhân."
+  });
+});
+
 export const rescheduleAppointment = asyncHandler(async (req, res) => {
   const { appointment_id } = req.params;
 

@@ -251,6 +251,39 @@ export const resetPassword = async (token, newPassword) => {
 
     return { success: true };
 };
+export const changePassword = async (userId, oldPassword, newPassword) => {
+    // 1. Lấy email/username của user từ bảng Users
+    const { data: user, error: userError } = await supabase
+        .from('Users')
+        .select('username, email')
+        .eq('user_id', userId)
+        .single();
+
+    if (userError || !user) throw new AppError('Không tìm thấy người dùng', 404);
+
+    const email = user.email || fakeEmail(user.username);
+
+    // 2. Xác thực mật khẩu cũ bằng cách thử đăng nhập
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: oldPassword,
+    });
+
+    if (signInError) {
+        throw new AppError('Mật khẩu cũ không chính xác', 400);
+    }
+
+    // 3. Cập nhật mật khẩu mới bằng Admin API (vượt qua yêu cầu session hiện tại nếu cần)
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+        userId,
+        { password: newPassword }
+    );
+
+    if (updateError) throw new AppError(`Lỗi khi đổi mật khẩu: ${updateError.message}`, 500);
+
+    return { success: true, message: "Đổi mật khẩu thành công" };
+};
+
 export const signOut = async () => {
     const { error } = await supabase.auth.signOut();
 

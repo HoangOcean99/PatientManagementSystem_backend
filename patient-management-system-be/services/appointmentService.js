@@ -62,7 +62,8 @@ export const getListAppointmentsByCurrentUserId = async (currentUserId, { date, 
         DoctorSlots!inner ( slot_id, start_time, end_time, slot_date),
         Patients!inner ( patient_id, Users!inner ( full_name, email )),
         Doctors!inner ( doctor_id, Users!inner ( full_name, email ) ),
-        ClinicServices!inner ( service_id, name, Departments!inner ( department_id, name ) )
+        ClinicServices!inner ( service_id, name, Departments!inner ( department_id, name ) ),
+        Invoices ( payment_status )
       `);
 
   if (date && isValidDate(date)) {
@@ -115,7 +116,8 @@ export const getListAppointmentsByAppointmentId = async (appointment_id) => {
       Doctors!inner ( doctor_id, Users!inner ( full_name, email, phone_number ) ),
       ClinicServices!inner ( service_id, name,departments!inner ( department_id, name ) ),
       DoctorSlots!inner ( slot_id, slot_date, start_time, end_time ),
-      Patients!inner ( patient_id, Users!inner ( full_name, email, phone_number ) )
+      Patients!inner ( patient_id, Users!inner ( full_name, email, phone_number ) ),
+      Invoices ( payment_status )
     `)
     .eq('appointment_id', appointment_id)
     .single();
@@ -359,6 +361,41 @@ export const cancelAppointment = async (appointment_id) => {
     await supabase.from('DoctorSlots').update({ is_booked: false }).eq('slot_id', appt.slot_id);
   }
   return { message: "Hủy lịch thành công, đã giải phóng khung giờ." };
+};
+
+export const cancelAppointmentByStaff = async (appointment_id) => {
+  const { data: appt, error: fetchError } = await supabase
+    .from('Appointments')
+    .select(`
+      appointment_id,
+      status,
+      slot_id,
+      Patients!inner ( Users!inner ( full_name, email ) ),
+      Doctors!inner ( Users!inner ( full_name ) ),
+      ClinicServices!inner ( name ),
+      DoctorSlots!inner ( slot_date, start_time, end_time )
+    `)
+    .eq('appointment_id', appointment_id)
+    .single();
+
+  if (fetchError || !appt) throw new AppError('Không tìm thấy lịch khám', 404);
+
+  if (['cancelled', 'completed'].includes(appt.status)) {
+    throw new AppError('Lịch này đã bị hủy hoặc đã hoàn thành', 400);
+  }
+
+  const { error: cancelError } = await supabase
+    .from('Appointments')
+    .update({ status: 'cancelled' })
+    .eq('appointment_id', appointment_id);
+
+  if (cancelError) throw new AppError('Lỗi khi hủy lịch', 500);
+
+  if (appt.slot_id) {
+    await supabase.from('DoctorSlots').update({ is_booked: false }).eq('slot_id', appt.slot_id);
+  }
+
+  return appt;
 };
 
 

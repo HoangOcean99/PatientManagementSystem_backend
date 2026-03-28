@@ -2,6 +2,7 @@ import express from "express";
 import { getListAppointments } from "../controllers/appointmentController.js";
 import { createAppointmentForPatient } from "../controllers/appointmentController.js";
 import { cancelAppointment } from "../controllers/appointmentController.js";
+import { cancelAppointmentByStaff } from "../controllers/appointmentController.js";
 import { approveAppointment } from "../controllers/appointmentController.js";
 import { getListPendingAppointment } from "../controllers/appointmentController.js";
 import { rescheduleAppointment } from "../controllers/appointmentController.js";
@@ -13,7 +14,7 @@ import { getListAppointmentsByCurrentUserId } from "../controllers/appointmentCo
 import { requireAuth, requireRole } from "../middlewares/auth.js";
 
 const appointmentRouter = express.Router();
-appointmentRouter.use(requireRole(['admin', 'receptionist', 'patient', 'doctor']));
+appointmentRouter.use(requireRole(['admin', 'receptionist', 'patient', 'doctor', 'accountant']));
 
 appointmentRouter.get('/getList', getListAppointments);
 appointmentRouter.get('/getList/:appointment_id', getListAppointmentsByAppointmentId);
@@ -21,6 +22,7 @@ appointmentRouter.get('/getListByStatus/:status', getListAppointmentsByStatus);
 appointmentRouter.post('/create', requireAuth, createAppointmentForPatient);
 appointmentRouter.post('/reschedule/:appointment_id', rescheduleAppointment);
 appointmentRouter.patch('/cancel/:appointment_id', cancelAppointment);
+appointmentRouter.patch('/staff-cancel/:appointment_id', requireRole(['admin', 'receptionist', 'accountant']), cancelAppointmentByStaff);
 appointmentRouter.put('/approve/:appointment_id', approveAppointment);
 appointmentRouter.get('/pending', getListPendingAppointment);
 appointmentRouter.patch('/updateStatus/:appointment_id', updateAppointmentStatus);

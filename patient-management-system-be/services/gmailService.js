@@ -175,6 +175,49 @@ export const sendAppointmentConfirmation = async (email, appointmentData) => {
     await sendMailWithIcal(email, "[MedSchedule] Xác nhận lịch hẹn thành công", htmlContent, icsContent);
 };
 
+export const sendAppointmentCancellation = async (email, appointmentData) => {
+    const patientName = appointmentData.Patients.Users.full_name;
+    const doctorName = appointmentData.Doctors.Users.full_name;
+    const serviceName = appointmentData.ClinicServices.name;
+    const date = appointmentData.DoctorSlots.slot_date;
+    const startTime = appointmentData.DoctorSlots.start_time;
+    const endTime = appointmentData.DoctorSlots.end_time;
+
+    const htmlContent = `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #f0f0f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="background-color: #ef4444; padding: 30px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px; letter-spacing: 1px;">MedSchedule</h1>
+            <p style="color: #fee2e2; margin-top: 5px; font-size: 14px;">Thông báo hủy lịch hẹn</p>
+        </div>
+        
+        <div style="padding: 40px 30px; color: #334155; line-height: 1.6;">
+            <p>Xin chào <b>${patientName}</b>,</p>
+            <p>Chúng tôi rất tiếc phải thông báo rằng lịch hẹn của bạn đã bị do quá thời gian thanh toán.</p>
+            
+            <div style="background-color: #fef2f2; padding: 20px; border-radius: 12px; border-left: 4px solid #ef4444; margin: 25px 0;">
+                <p style="margin: 5px 0; font-size: 16px;"><b>👨‍⚕️ Bác sĩ:</b> ${doctorName}</p>
+                <p style="margin: 5px 0; font-size: 16px;"><b>🩺 Dịch vụ:</b> ${serviceName}</p>
+                <p style="margin: 5px 0; font-size: 16px;"><b>📅 Ngày khám:</b> ${date}</p>
+                <p style="margin: 5px 0; font-size: 16px;"><b>⏰ Thời gian:</b> ${startTime} - ${endTime}</p>
+            </div>
+            
+            <p style="font-size: 14px; color: #64748b;">
+                Nếu bạn có bất kỳ thắc mắc nào hoặc muốn đặt lại lịch, vui lòng liên hệ hotline: 0968178905 của phòng khám hoặc truy cập ứng dụng. <br>
+                Chúng tôi xin lỗi vì sự bất tiện này.
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 30px 0;">
+            
+            <div style="text-align: center;">
+                <p style="font-size: 12px; color: #94a3b8; margin: 0;">© 2026 MedSchedule. Tất cả quyền được bảo lưu.</p>
+            </div>
+        </div>
+    </div>
+    `;
+
+    await sendMail(email, "[MedSchedule] Thông báo hủy lịch hẹn", htmlContent);
+};
+
 // ── Send Family Invitation Email ──
 export const sendFamilyInvitationEmail = async (targetEmail, inviterName, code) => {
     const htmlContent = `
