@@ -165,7 +165,7 @@ export const getDashboardData = async () => {
     const { count: unpaidCount } = await supabase
         .from('Invoices')
         .select('*', { count: 'exact', head: true })
-        .eq('payment_status', 'unpaid');
+        .eq('payment_status', 'partial');
 
     const { data: depositsToday } = await supabase
         .from('Appointments')
@@ -195,7 +195,8 @@ export const getDashboardData = async () => {
             total_amount,
             payment_status,
             issued_at,
-            Patients ( Users ( full_name ) )
+            Patients ( Users ( full_name ) ),
+            Appointments ( deposit_paid )
         `)
         .order('issued_at', { ascending: false })
         .limit(5);
@@ -219,7 +220,7 @@ export const getDashboardData = async () => {
             id: inv.invoice_id,
             patient: inv.Patients?.Users?.full_name || 'N/A',
             type: 'invoice',
-            amount: inv.total_amount,
+            amount: Number(inv.total_amount) - Number(inv.Appointments?.deposit_paid || 0),
             date: new Date(inv.issued_at).toLocaleDateString('vi-VN'),
             status: inv.payment_status === 'paid' ? 'paid' : 'unpaid',
             rawDate: new Date(inv.issued_at).getTime()

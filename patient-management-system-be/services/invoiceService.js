@@ -4,7 +4,7 @@ import { AppError } from "../utils/app-error.js";
 export const getInvoicesByPatient = async (patientId) => {
     const { data, error } = await supabase
         .from('Invoices')
-        .select(`*, InvoiceItems (*), Appointments ( appointment_id, Doctors ( doctor_id, Users ( full_name ) ), ClinicServices ( name ) )`)
+        .select(`*, InvoiceItems (*), Appointments ( appointment_id, deposit_paid, Doctors ( doctor_id, Users ( full_name ) ), ClinicServices ( name ) )`)
         .eq('patient_id', patientId)
         .order('issued_at', { ascending: false });
 
@@ -15,7 +15,7 @@ export const getInvoicesByPatient = async (patientId) => {
 export const getInvoiceById = async (invoiceId) => {
     const { data, error } = await supabase
         .from('Invoices')
-        .select(`*, InvoiceItems (*), Appointments ( appointment_id, Doctors ( doctor_id, Users ( full_name ) ), ClinicServices ( name ) )`)
+        .select(`*, InvoiceItems (*), Appointments ( appointment_id, deposit_paid, Doctors ( doctor_id, Users ( full_name ) ), ClinicServices ( name ) )`)
         .eq('invoice_id', invoiceId)
         .single();
 
